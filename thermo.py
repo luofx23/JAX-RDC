@@ -24,7 +24,7 @@ species_list = ReactionParams['species']
 ns = ReactionParams['num_of_species']
 ni = ReactionParams['num_of_inert_species']
 n = ns - ni
-M,Tcr,cp_cof_low,cp_cof_high,dcp_cof_low,dcp_cof_high,h_cof_low,h_cof_high,h_cof_low_chem,h_cof_high_chem,s_cof_low,s_cof_high,logcof_low,logcof_high = get_cantera_coeffs(species_list,mech)
+species_M,Mex,Tcr,cp_cof_low,cp_cof_high,dcp_cof_low,dcp_cof_high,h_cof_low,h_cof_high,h_cof_low_chem,h_cof_high_chem,s_cof_low,s_cof_high,logcof_low,logcof_high = get_cantera_coeffs(species_list,mech)
 
 def fill_Y(Y):
     Y_last = 1.0 - jnp.sum(Y,axis=0,keepdims=True)
@@ -46,8 +46,8 @@ def get_gibbs_single(Tcr,h_cof_low,h_cof_high,s_cof_low,s_cof_high,logcof_low,lo
 
     
 def get_R(Y):
-    Y = fill_Y(Y,axis=0,keepdims=True)
-    R = jnp.sum(1/M*Y,axis=0,keepdims=True)
+    Y = fill_Y(Y)
+    R = jnp.sum(1/Mex*Y,axis=0,keepdims=True)
     return R
 
 def get_thermo_properties(T):
@@ -110,7 +110,7 @@ def get_T_bwd(res, g):
     dTde = 1/cv
 
     _, _, h_i = get_thermo_properties(T_final[0])
-    e_i = h_i - 1/M*T_final
+    e_i = h_i - 1/Mex*T_final
     dTdY = -e_i/cv
     
     return (g * dTde, g * dTdY, jnp.zeros_like(T_final))

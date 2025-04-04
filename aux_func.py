@@ -21,7 +21,7 @@ def aux_to_thermo(U,aux):
 
 def U_to_prim(U,aux):
     state = U
-    gamma,T = aux_to_thermo(aux)
+    gamma,T = aux_to_thermo(U,aux)
     rho = state[0:1,:,:]
     u = state[1:2,:,:]/rho
     v = state[2:3,:,:]/rho

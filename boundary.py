@@ -8,8 +8,9 @@ from thermo import get_thermo,get_R
 
 boundaryParams = {}
 
-def read_boundary_params(boundaryParams:dict):
+def read_boundary_params(boundary:dict):
     global boundaryParams
+    boundaryParams = boundary
     #return boundaryParams
 
 #user-defined-functions#

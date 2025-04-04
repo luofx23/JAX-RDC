@@ -142,8 +142,9 @@ def read_reaction_mechanism(file_path:str):
     
     num_of_inert_species = jnp.sum(zero_col_mask)
     zero_col_mask = jnp.all(vf + vb == 0, axis=0)
+    zero_col_mask = jnp.asarray(zero_col_mask)
     
-    inert_check = jnp.logical_or(~jnp.any(zero_col_mask),jnp.all(species_list[jnp.argmax(zero_col_mask):]))
+    inert_check = jnp.logical_or(~jnp.any(zero_col_mask),jnp.all(zero_col_mask[jnp.argmax(zero_col_mask):]))
     assert inert_check, "Inert species must be the last elements in species_list"
     reaction_params = {
         'species': species_list,
@@ -180,18 +181,18 @@ def get_cantera_coeffs(species_list,mech='gri30.yaml'):
     coeffs_low = jnp.array(coeffs_low)*jnp.array([[1,T0,T0**2,T0**3,T0**4,1/T0,1]])
     coeffs_high = jnp.array(coeffs_high)*jnp.array([[1,T0,T0**2,T0**3,T0**4,1/T0,1]])
     species_M = jnp.array(species_M)/(1000*M0)
-    M = jnp.expand_dims(species_M,(1,2))
+    Mex = jnp.expand_dims(species_M,(1,2))
     
-    Tcr = jnp.array(Tcr/T0)
+    Tcr = jnp.array(Tcr)/T0
     
-    cp_cof_low = jnp.flip(coeffs_low[:,0:5],axis=1)/M[:,None]
-    cp_cof_high = jnp.flip(coeffs_high[:,0:5],axis=1)/M[:,None]
+    cp_cof_low = jnp.flip(coeffs_low[:,0:5],axis=1)/species_M[:,None]
+    cp_cof_high = jnp.flip(coeffs_high[:,0:5],axis=1)/species_M[:,None]
     
     dcp_cof_low = cp_cof_low[:,0:-1]*jnp.array([[4,3,2,1]])
     dcp_cof_high = cp_cof_high[:,0:-1]*jnp.array([[4,3,2,1]])
     
-    h_cof_low = jnp.flip(jnp.roll(coeffs_low[:,0:6],1,axis=1),axis=1)*jnp.array([[1/5,1/4,1/3,1/2,1,1]])/M[:,None]
-    h_cof_high = jnp.flip(jnp.roll(coeffs_high[:,0:6],1,axis=1),axis=1)*jnp.array([[1/5,1/4,1/3,1/2,1,1]])/M[:,None]
+    h_cof_low = jnp.flip(jnp.roll(coeffs_low[:,0:6],1,axis=1),axis=1)*jnp.array([[1/5,1/4,1/3,1/2,1,1]])/species_M[:,None]
+    h_cof_high = jnp.flip(jnp.roll(coeffs_high[:,0:6],1,axis=1),axis=1)*jnp.array([[1/5,1/4,1/3,1/2,1,1]])/species_M[:,None]
     
     h_cof_low_chem = jnp.flip(jnp.roll(coeffs_low[:,0:6],1,axis=1),axis=1)*jnp.array([[1/5,1/4,1/3,1/2,1,1]])
     h_cof_high_chem = jnp.flip(jnp.roll(coeffs_high[:,0:6],1,axis=1),axis=1)*jnp.array([[1/5,1/4,1/3,1/2,1,1]])
@@ -202,5 +203,5 @@ def get_cantera_coeffs(species_list,mech='gri30.yaml'):
     logcof_low = coeffs_low[:,0]
     logcof_high = coeffs_high[:,0]
     
-    return M,Tcr,cp_cof_low,cp_cof_high,dcp_cof_low,dcp_cof_high,h_cof_low,h_cof_high,h_cof_low_chem,h_cof_high_chem,s_cof_low,s_cof_high,logcof_low,logcof_high
+    return species_M,Mex,Tcr,cp_cof_low,cp_cof_high,dcp_cof_low,dcp_cof_high,h_cof_low,h_cof_high,h_cof_low_chem,h_cof_high_chem,s_cof_low,s_cof_high,logcof_low,logcof_high
 

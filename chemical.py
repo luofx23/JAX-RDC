@@ -23,7 +23,7 @@ species_list = ReactionParams['species']
 ns = ReactionParams['num_of_species']
 ni = ReactionParams['num_of_inert_species']
 na = ns - ni
-species_M,_,_,_,_,_,_,_,_,_,_,_,_,_ = get_cantera_coeffs(species_list,thermo_mech)
+species_M,Mex,_,_,_,_,_,_,_,_,_,_,_,_,_ = get_cantera_coeffs(species_list,thermo_mech)
 
     
 def reactionConstant_i(T, X, i, k, n):
@@ -87,7 +87,7 @@ def construct_matrix_equation(T,X,dt):
 def solve_implicit_rate(T,rho,Y,dt):
     Y = fill_Y(Y)
     rhoY = rho*Y
-    X = rhoY/species_M
+    X = rhoY/Mex
     A, b = construct_matrix_equation(T,X,dt)
     dU = jnp.linalg.solve(A,b)
     return jnp.transpose(dU[:,:,:,0],(2,0,1))
