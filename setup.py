@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name="janc",
     version="0.1.0",
-    package_dir={"janc": "src"},
+    package_dir={"": "src"},
     packages=find_packages(where="src"),
     install_requires=[
         'numpy>=1.21',
