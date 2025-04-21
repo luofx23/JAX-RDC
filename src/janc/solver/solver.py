@@ -8,7 +8,7 @@ from ..boundary import boundary
 from functools import partial
 
 from ..preprocess.config import template_node_num
-from amr import jaxamr as amr
+from jaxamr import amr
 
 def set_solver(thermo_set,boundary_set,source_set = None, solver_mode='base'):
     thermo.set_thermo(thermo_set)
