@@ -8,7 +8,7 @@ setup(
     package_dir={"": "src"},
     install_requires=[
         'cantera',
-        'amr @ git+https://github.com/luofx23/JAX-AMR.git@main#subdirectory=src/amr'
+        'amr @ git+https://github.com/luofx23/JAX-AMR.git'
     ],
     python_requires=">=3.7"
 )
