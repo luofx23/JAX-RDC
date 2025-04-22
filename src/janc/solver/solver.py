@@ -5,6 +5,7 @@ from .flux import weno5
 from ..thermodynamics import thermo
 from ..thermodynamics import chemical
 from ..boundary import boundary
+from ..parallel import boundary as parallel_boundary
 from functools import partial
 
 from ..preprocess.config import template_node_num
@@ -38,7 +39,7 @@ def set_solver(thermo_set,boundary_set,source_set = None, solver_mode='base'):
         if solver_mode == 'parallel':
             def rhs(U,aux,dx,dy):
                 aux = aux_func.update_aux(U, aux)
-                U_with_ghost,aux_with_ghost = boundary.parallel_boundary_conditions(U,aux)
+                U_with_ghost,aux_with_ghost = parallel_boundary.boundary_conditions(U,aux)
                 physical_rhs = weno5(U_with_ghost,aux_with_ghost,dx,dy) + aux_func.source_terms(U, aux)
                 return physical_rhs
         else:
