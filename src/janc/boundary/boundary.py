@@ -18,7 +18,7 @@ def set_boundary(boundary_config:dict):
     
     if callable(boundary_config['left_boundary']):
         def left_boundary(padded_U,padded_aux):
-            U_lb,aux_lb = padded_U[:,3:6,:],padded_aux[:,3:6,:]
+            U_lb,aux_lb = padded_U[:,3:6,3:-3],padded_aux[:,3:6,3:-3]
             U_lb,aux_lb = boundary_config['left_boundary'](U_lb,aux_lb)
             U_with_lb,aux_with_lb = replace_lb(U_lb,aux_lb,padded_U,padded_aux)
             return U_with_lb,aux_with_lb
@@ -31,7 +31,7 @@ def set_boundary(boundary_config:dict):
                 
         if boundary_config['left_boundary'] == 'slip_wall':
             def left_boundary(padded_U,padded_aux):
-                U_lb,aux_lb = padded_U[:,3:6,:],padded_aux[:,3:6,:]
+                U_lb,aux_lb = padded_U[:,3:6,3:-3],padded_aux[:,3:6,3:-3]
                 U_lb,aux_lb = slip_wall.left(U_lb,aux_lb)
                 U_with_lb,aux_with_lb = replace_lb(U_lb,aux_lb,padded_U,padded_aux)
                 return U_with_lb,aux_with_lb
@@ -40,13 +40,13 @@ def set_boundary(boundary_config:dict):
                 return padded_U,padded_aux
         elif boundary_config['left_boundary'] == 'neumann':
             def left_boundary(padded_U,padded_aux):
-                U_lb,aux_lb = padded_U[:,3:6,:],padded_aux[:,3:6,:]
+                U_lb,aux_lb = padded_U[:,3:6,3:-3],padded_aux[:,3:6,3:-3]
                 U_lb,aux_lb = neumann.left(U_lb,aux_lb)
                 U_with_lb,aux_with_lb = replace_lb(U_lb,aux_lb,padded_U,padded_aux)
                 return U_with_lb,aux_with_lb
         elif boundary_config['left_boundary'] == 'pressure_outlet':
             def left_boundary(padded_U,padded_aux):
-                U_lb,aux_lb = padded_U[:,3:6,:],padded_aux[:,3:6,:]
+                U_lb,aux_lb = padded_U[:,3:6,3:-3],padded_aux[:,3:6,3:-3]
                 U_lb,aux_lb = pressure_outlet.left(U_lb,aux_lb)
                 U_with_lb,aux_with_lb = replace_lb(U_lb,aux_lb,padded_U,padded_aux)
                 return U_with_lb,aux_with_lb
@@ -56,7 +56,7 @@ def set_boundary(boundary_config:dict):
     
     if callable(boundary_config['right_boundary']):
         def right_boundary(padded_U,padded_aux):
-            U_rb,aux_rb = padded_U[:,-6:-3,:],padded_aux[:,-6:-3,:]
+            U_rb,aux_rb = padded_U[:,-6:-3,3:-3],padded_aux[:,-6:-3,3:-3]
             U_rb,aux_rb = boundary_config['right_boundary'](U_rb,aux_rb)
             U_with_rb,aux_with_rb = replace_rb(U_rb,aux_rb,padded_U,padded_aux)
             return U_with_rb,aux_with_rb
@@ -69,7 +69,7 @@ def set_boundary(boundary_config:dict):
                 
         if boundary_config['right_boundary'] == 'slip_wall':
             def right_boundary(padded_U,padded_aux):
-                U_rb,aux_rb = padded_U[:,-6:-3,:],padded_aux[:,-6:-3,:]
+                U_rb,aux_rb = padded_U[:,-6:-3,3:-3],padded_aux[:,-6:-3,3:-3]
                 U_rb,aux_rb = slip_wall.right(U_rb,aux_rb)
                 U_with_rb,aux_with_rb = replace_rb(U_rb,aux_rb,padded_U,padded_aux)
                 return U_with_rb,aux_with_rb
@@ -78,13 +78,13 @@ def set_boundary(boundary_config:dict):
                 return padded_U,padded_aux
         elif boundary_config['right_boundary'] == 'neumann':
             def right_boundary(padded_U,padded_aux):
-                U_rb,aux_rb = padded_U[:,-6:-3,:],padded_aux[:,-6:-3,:]
+                U_rb,aux_rb = padded_U[:,-6:-3,3:-3],padded_aux[:,-6:-3,3:-3]
                 U_rb,aux_rb = neumann.right(U_rb,aux_rb)
                 U_with_rb,aux_with_rb = replace_rb(U_rb,aux_rb,padded_U,padded_aux)
                 return U_with_rb,aux_with_rb
         elif boundary_config['right_boundary'] == 'pressure_outlet':
             def right_boundary(padded_U,padded_aux):
-                U_rb,aux_rb = padded_U[:,-6:-3,:],padded_aux[:,-6:-3,:]
+                U_rb,aux_rb = padded_U[:,-6:-3,3:-3],padded_aux[:,-6:-3,3:-3]
                 U_rb,aux_rb = pressure_outlet.right(U_rb,aux_rb)
                 U_with_rb,aux_with_rb = replace_rb(U_rb,aux_rb,padded_U,padded_aux)
                 return U_with_rb,aux_with_rb
@@ -95,7 +95,7 @@ def set_boundary(boundary_config:dict):
     
     if callable(boundary_config['bottom_boundary']):
         def bottom_boundary(padded_U,padded_aux):
-            U_bb,aux_bb = padded_U[:,:,3:6],padded_aux[:,:,3:6]
+            U_bb,aux_bb = padded_U[:,3:-3,3:6],padded_aux[:,3:-3,3:6]
             U_bb,aux_bb = boundary_config['bottom_boundary'](U_bb,aux_bb)
             U_with_bb,aux_with_bb = replace_bb(U_bb,aux_bb,padded_U,padded_aux)
             return U_with_bb,aux_with_bb
@@ -108,7 +108,7 @@ def set_boundary(boundary_config:dict):
                 
         if boundary_config['bottom_boundary'] == 'slip_wall':
             def bottom_boundary(padded_U,padded_aux):
-                U_bb,aux_bb = padded_U[:,:,3:6],padded_aux[:,:,3:6]
+                U_bb,aux_bb = padded_U[:,3:-3,3:6],padded_aux[:,3:-3,3:6]
                 U_bb,aux_bb = slip_wall.bottom(U_bb,aux_bb)
                 U_with_bb,aux_with_bb = replace_bb(U_bb,aux_bb,padded_U,padded_aux)
                 return U_with_bb,aux_with_bb
@@ -117,13 +117,13 @@ def set_boundary(boundary_config:dict):
                 return padded_U,padded_aux
         elif boundary_config['bottom_boundary'] == 'neumann':
             def bottom_boundary(padded_U,padded_aux):
-                U_bb,aux_bb = padded_U[:,:,3:6],padded_aux[:,:,3:6]
+                U_bb,aux_bb = padded_U[:,3:-3,3:6],padded_aux[:,3:-3,3:6]
                 U_bb,aux_bb = neumann.bottom(U_bb,aux_bb)
                 U_with_bb,aux_with_bb = replace_bb(U_bb,aux_bb,padded_U,padded_aux)
                 return U_with_bb,aux_with_bb
         elif boundary_config['bottom_boundary'] == 'pressure_outlet':
             def bottom_boundary(padded_U,padded_aux):
-                U_bb,aux_bb = padded_U[:,:,3:6],padded_aux[:,:,3:6]
+                U_bb,aux_bb = padded_U[:,3:-3,3:6],padded_aux[:,3:-3,3:6]
                 U_bb,aux_bb = pressure_outlet.bottom(U_bb,aux_bb)
                 U_with_bb,aux_with_bb = replace_bb(U_bb,aux_bb,padded_U,padded_aux)
                 return U_with_bb,aux_with_bb
@@ -134,7 +134,7 @@ def set_boundary(boundary_config:dict):
     
     if callable(boundary_config['up_boundary']):
         def up_boundary(padded_U,padded_aux):
-            U_ub,aux_ub = padded_U[:,:,-6:-3],padded_aux[:,:,-6:-3]
+            U_ub,aux_ub = padded_U[:,3:-3,-6:-3],padded_aux[:,3:-3,-6:-3]
             U_ub,aux_ub = boundary_config['up_boundary'](U_ub,aux_ub)
             U_with_ub,aux_with_ub = replace_ub(U_ub,aux_ub,padded_U,padded_aux)
             return U_with_ub,aux_with_ub
@@ -147,7 +147,7 @@ def set_boundary(boundary_config:dict):
                 
         if boundary_config['up_boundary'] == 'slip_wall':
             def up_boundary(padded_U,padded_aux):
-                U_ub,aux_ub = padded_U[:,:,-6:-3],padded_aux[:,:,-6:-3]
+                U_ub,aux_ub = padded_U[:,3:-3,-6:-3],padded_aux[:,3:-3,-6:-3]
                 U_ub,aux_ub = slip_wall.up(U_ub,aux_ub)
                 U_with_ub,aux_with_ub = replace_ub(U_ub,aux_ub,padded_U,padded_aux)
                 return U_with_ub,aux_with_ub
@@ -156,13 +156,13 @@ def set_boundary(boundary_config:dict):
                 return padded_U,padded_aux
         elif boundary_config['up_boundary'] == 'neumann':
             def up_boundary(padded_U,padded_aux):
-                U_ub,aux_ub = padded_U[:,:,-6:-3],padded_aux[:,:,-6:-3]
+                U_ub,aux_ub = padded_U[:,3:-3,-6:-3],padded_aux[:,3:-3,-6:-3]
                 U_ub,aux_ub = neumann.up(U_ub,aux_ub)
                 U_with_ub,aux_with_ub = replace_ub(U_ub,aux_ub,padded_U,padded_aux)
                 return U_with_ub,aux_with_ub
         elif boundary_config['up_boundary'] == 'pressure_outlet':
             def up_boundary(padded_U,padded_aux):
-                U_ub,aux_ub = padded_U[:,:,-6:-3],padded_aux[:,:,-6:-3]
+                U_ub,aux_ub = padded_U[:,3:-3,-6:-3],padded_aux[:,3:-3,-6:-3]
                 U_ub,aux_ub = pressure_outlet.up(U_ub,aux_ub)
                 U_with_ub,aux_with_ub = replace_ub(U_ub,aux_ub,padded_U,padded_aux)
                 return U_with_ub,aux_with_ub
