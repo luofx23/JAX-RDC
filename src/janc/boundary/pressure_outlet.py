@@ -1,6 +1,6 @@
 import jax
 import jax.numpy as jnp
-import thermo
+from ..thermodynamics import thermo
 
 def pressure_outlet(state_out,gamma_out,T_out,normal_vel,Pb):
     rho_out = state_out[0:1,:,:]
