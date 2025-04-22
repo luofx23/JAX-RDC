@@ -6,7 +6,7 @@ user_source = None
 def set_source_terms(user_set):
     global user_source
     
-    def zero_source_terms(U,aux):
+    def zero_source_terms(U,aux,theta=None):
         return jnp.zeros_like(U)
     
     if not thermo.thermo_settings['is_detailed_chemistry']:
@@ -30,10 +30,10 @@ def update_aux(U,aux):
     Y = U[4:,:,:]/rho
     initial_T = aux[1:2]
     T,gamma = thermo.get_T(e,Y,initial_T)
-    return jnp.concatenate([gamma,T],axis=0)
+    return aux.at[0:2].set(jnp.concatenate([gamma,T],axis=0))
 
-def source_terms(U,aux):
-    return user_source(U,aux)
+def source_terms(U,aux,theta=None):
+    return user_source(U,aux,theta)
 
 def aux_to_thermo(U,aux):
     gamma = aux[0:1]
