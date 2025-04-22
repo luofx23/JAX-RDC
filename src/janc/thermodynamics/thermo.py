@@ -87,8 +87,8 @@ def fill_Y(Y):
 
 def get_R(Y):
     Y = fill_Y(Y)
-    expand_axes = range(species_M.ndim, Y.ndim)
-    Mex = jnp.expand_dims(species_M, tuple(expand_axes))
+    #expand_axes = range(species_M.ndim, Y.ndim)
+    #Mex = jnp.expand_dims(species_M, tuple(expand_axes))
     R = jnp.sum(1/Mex*Y,axis=0,keepdims=True)
     return R
 
@@ -126,7 +126,7 @@ def get_thermo_nasa7(T, Y):
     """
     R = get_R(Y)
     Y = fill_Y(Y)
-    cp_i, dcp_i, h_i = get_thermo_properties(jnp.squeeze(T))
+    cp_i, dcp_i, h_i = get_thermo_properties(T[0])
     cp = jnp.sum(cp_i*Y,axis=0,keepdims=True)
     h = jnp.sum(h_i*Y,axis=0,keepdims=True)
     dcp = jnp.sum(dcp_i*Y,axis=0,keepdims=True)
