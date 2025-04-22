@@ -87,7 +87,8 @@ def fill_Y(Y):
 
 def get_R(Y):
     Y = fill_Y(Y)
-    Mex = jnp.broadcast_to(species_M,Y.shape)
+    expand_axes = range(species_M.ndim, Y.ndim)
+    Mex = jnp.expand_dims(species_M, tuple(expand_axes))
     R = jnp.sum(1/Mex*Y,axis=0,keepdims=True)
     return R
 
