@@ -29,7 +29,7 @@ def set_solver(thermo_set,boundary_set,source_set = None, solver_mode='base'):
     
     if solver_mode == 'amr':
         
-        @partial(vmap,in_axes=(0, 0, None,None))
+        @partial(vmap,in_axes=(0, 0, None, None, None))
         def rhs(U, aux, dx, dy, theta=None):
             aux = aux_func.update_aux(U, aux)
             physical_rhs = weno5(U,aux,dx,dy) + aux_func.source_terms(U[:,3:-3,3:-3], aux[:,3:-3,3:-3], theta)
