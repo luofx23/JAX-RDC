@@ -1,60 +1,180 @@
 import jax
 import jax.numpy as jnp
-usr_boundary_func = None
-#boundaryParams = {}
+from .boundary_padding import pad, replace_lb, replace_rb, replace_ub, replace_bb
+from . import slip_wall
+from . import neumann
+from . import pressure_outlet
 
-def set_boundary(boundary:dict):
-    global usr_boundary_func
-    assert (('boundary_conditions' in boundary) and (boundary['boundary_conditions'] is not None)),"funtions on boundary conditions must be provided."
-    usr_boundary_func = boundary['boundary_conditions']
-    #boundaryParams = boundary
-    #return boundaryParams
 
-#user-defined-functions#
-def boundary_conditions(U,aux):
-    field = jnp.concatenate([U,aux],axis=0)
-    field_periodic_x = jnp.concatenate([field[:,-4:-3,:],field[:,-3:-2,:],field[:,-2:-1,:],field,field[:,1:2,:],field[:,2:3,:],field[:,3:4,:]],axis=1)
-    field_periodic_pad = jnp.concatenate([field_periodic_x[:,:,-4:-3],field_periodic_x[:,:,-3:-2],field_periodic_x[:,:,-2:-1],field_periodic_x,field_periodic_x[:,:,1:2],field_periodic_x[:,:,2:3],field_periodic_x[:,:,3:4]],axis=2)
-    U_periodic_pad,aux_periodic_pad = field_periodic_pad[0:-2],field_periodic_pad[-2:]
-    U_with_lb,aux_with_lb = usr_boundary_func['left_boundary'](U_periodic_pad,aux_periodic_pad)
-    U_with_rb,aux_with_rb = usr_boundary_func['right_boundary'](U_with_lb,aux_with_lb)
-    U_with_bb,aux_with_bb = usr_boundary_func['bottom_boundary'](U_with_rb,aux_with_rb)
-    U_with_ghost_cell,aux_with_ghost_cell = usr_boundary_func['up_boundary'](U_with_bb,aux_with_bb)
-  
+boundary_func = {'left_boundary':None,
+                'right_boundary':None,
+                'up_boundary':None,
+                'bottom_boundary':None}
+
+
+def set_boundary(boundary_config:dict):
+    global boundary_func
+    
+    
+    if callable(boundary_config['left_boundary']):
+        def left_boundary(padded_U,padded_aux):
+            U_lb,aux_lb = padded_U[:,3:6,:],padded_aux[:,3:6,:]
+            U_lb,aux_lb = boundary_config['left_boundary'](U_lb,aux_lb)
+            U_with_lb,aux_with_lb = replace_lb(U_lb,aux_lb,padded_U,padded_aux)
+            return U_with_lb,aux_with_lb
+    else:
+        assert (boundary_config['left_boundary'] == 'slip_wall') or\
+               (boundary_config['left_boundary'] == 'periodic') or\
+                   (boundary_config['left_boundary'] == 'neumann') or\
+               (boundary_config['left_boundary'] == 'pressure_outlet'),\
+                'the bc type is not supported, please try custom  bc.'
+                
+        if boundary_config['left_boundary'] == 'slip_wall':
+            def left_boundary(padded_U,padded_aux):
+                U_lb,aux_lb = padded_U[:,3:6,:],padded_aux[:,3:6,:]
+                U_lb,aux_lb = slip_wall.left(U_lb,aux_lb)
+                U_with_lb,aux_with_lb = replace_lb(U_lb,aux_lb,padded_U,padded_aux)
+                return U_with_lb,aux_with_lb
+        elif boundary_config['left_boundary'] == 'periodic':
+            def left_boundary(padded_U,padded_aux):
+                return padded_U,padded_aux
+        elif boundary_config['left_boundary'] == 'neumann':
+            def left_boundary(padded_U,padded_aux):
+                U_lb,aux_lb = padded_U[:,3:6,:],padded_aux[:,3:6,:]
+                U_lb,aux_lb = neumann.left(U_lb,aux_lb)
+                U_with_lb,aux_with_lb = replace_lb(U_lb,aux_lb,padded_U,padded_aux)
+                return U_with_lb,aux_with_lb
+        elif boundary_config['left_boundary'] == 'pressure_outlet':
+            def left_boundary(padded_U,padded_aux):
+                U_lb,aux_lb = padded_U[:,3:6,:],padded_aux[:,3:6,:]
+                U_lb,aux_lb = pressure_outlet.left(U_lb,aux_lb)
+                U_with_lb,aux_with_lb = replace_lb(U_lb,aux_lb,padded_U,padded_aux)
+                return U_with_lb,aux_with_lb
+            
+    boundary_func['left_boundary'] = left_boundary
+    
+    
+    if callable(boundary_config['right_boundary']):
+        def right_boundary(padded_U,padded_aux):
+            U_rb,aux_rb = padded_U[:,-6:-3,:],padded_aux[:,-6:-3,:]
+            U_rb,aux_rb = boundary_config['right_boundary'](U_rb,aux_rb)
+            U_with_rb,aux_with_rb = replace_rb(U_rb,aux_rb,padded_U,padded_aux)
+            return U_with_rb,aux_with_rb
+    else:
+        assert (boundary_config['right_boundary'] == 'slip_wall') or\
+               (boundary_config['right_boundary'] == 'periodic') or\
+                   (boundary_config['right_boundary'] == 'neumann') or\
+               (boundary_config['right_boundary'] == 'pressure_outlet'),\
+                'the bc type is not supported, please try custom  bc.'
+                
+        if boundary_config['right_boundary'] == 'slip_wall':
+            def right_boundary(padded_U,padded_aux):
+                U_rb,aux_rb = padded_U[:,-6:-3,:],padded_aux[:,-6:-3,:]
+                U_rb,aux_rb = slip_wall.right(U_rb,aux_rb)
+                U_with_rb,aux_with_rb = replace_rb(U_rb,aux_rb,padded_U,padded_aux)
+                return U_with_rb,aux_with_rb
+        elif boundary_config['right_boundary'] == 'periodic':
+            def right_boundary(padded_U,padded_aux):
+                return padded_U,padded_aux
+        elif boundary_config['right_boundary'] == 'neumann':
+            def right_boundary(padded_U,padded_aux):
+                U_rb,aux_rb = padded_U[:,-6:-3,:],padded_aux[:,-6:-3,:]
+                U_rb,aux_rb = neumann.right(U_rb,aux_rb)
+                U_with_rb,aux_with_rb = replace_rb(U_rb,aux_rb,padded_U,padded_aux)
+                return U_with_rb,aux_with_rb
+        elif boundary_config['right_boundary'] == 'pressure_outlet':
+            def right_boundary(padded_U,padded_aux):
+                U_rb,aux_rb = padded_U[:,-6:-3,:],padded_aux[:,-6:-3,:]
+                U_rb,aux_rb = pressure_outlet.right(U_rb,aux_rb)
+                U_with_rb,aux_with_rb = replace_rb(U_rb,aux_rb,padded_U,padded_aux)
+                return U_with_rb,aux_with_rb
+            
+    boundary_func['right_boundary'] = right_boundary    
+    
+    
+    
+    if callable(boundary_config['bottom_boundary']):
+        def bottom_boundary(padded_U,padded_aux):
+            U_bb,aux_bb = padded_U[:,:,3:6],padded_aux[:,:,3:6]
+            U_bb,aux_bb = boundary_config['bottom_boundary'](U_bb,aux_bb)
+            U_with_bb,aux_with_bb = replace_bb(U_bb,aux_bb,padded_U,padded_aux)
+            return U_with_bb,aux_with_bb
+    else:
+        assert (boundary_config['bottom_boundary'] == 'slip_wall') or\
+               (boundary_config['bottom_boundary'] == 'periodic') or\
+                   (boundary_config['bottom_boundary'] == 'neumann') or\
+               (boundary_config['bottom_boundary'] == 'pressure_outlet'),\
+                'the bc type is not supported, please try custom  bc.'
+                
+        if boundary_config['bottom_boundary'] == 'slip_wall':
+            def bottom_boundary(padded_U,padded_aux):
+                U_bb,aux_bb = padded_U[:,:,3:6],padded_aux[:,:,3:6]
+                U_bb,aux_bb = slip_wall.bottom(U_bb,aux_bb)
+                U_with_bb,aux_with_bb = replace_bb(U_bb,aux_bb,padded_U,padded_aux)
+                return U_with_bb,aux_with_bb
+        elif boundary_config['bottom_boundary'] == 'periodic':
+            def bottom_boundary(padded_U,padded_aux):
+                return padded_U,padded_aux
+        elif boundary_config['bottom_boundary'] == 'neumann':
+            def bottom_boundary(padded_U,padded_aux):
+                U_bb,aux_bb = padded_U[:,:,3:6],padded_aux[:,:,3:6]
+                U_bb,aux_bb = neumann.bottom(U_bb,aux_bb)
+                U_with_bb,aux_with_bb = replace_bb(U_bb,aux_bb,padded_U,padded_aux)
+                return U_with_bb,aux_with_bb
+        elif boundary_config['bottom_boundary'] == 'pressure_outlet':
+            def bottom_boundary(padded_U,padded_aux):
+                U_bb,aux_bb = padded_U[:,:,3:6],padded_aux[:,:,3:6]
+                U_bb,aux_bb = pressure_outlet.bottom(U_bb,aux_bb)
+                U_with_bb,aux_with_bb = replace_bb(U_bb,aux_bb,padded_U,padded_aux)
+                return U_with_bb,aux_with_bb
+            
+    boundary_func['bottom_boundary'] = bottom_boundary
+    
+    
+    
+    if callable(boundary_config['up_boundary']):
+        def up_boundary(padded_U,padded_aux):
+            U_ub,aux_ub = padded_U[:,:,-6:-3],padded_aux[:,:,-6:-3]
+            U_ub,aux_ub = boundary_config['up_boundary'](U_ub,aux_ub)
+            U_with_ub,aux_with_ub = replace_ub(U_ub,aux_ub,padded_U,padded_aux)
+            return U_with_ub,aux_with_ub
+    else:
+        assert (boundary_config['up_boundary'] == 'slip_wall') or\
+               (boundary_config['up_boundary'] == 'periodic') or\
+                   (boundary_config['up_boundary'] == 'neumann') or\
+               (boundary_config['up_boundary'] == 'pressure_outlet'),\
+                'the bc type is not supported, please try custom  bc.'
+                
+        if boundary_config['up_boundary'] == 'slip_wall':
+            def up_boundary(padded_U,padded_aux):
+                U_ub,aux_ub = padded_U[:,:,-6:-3],padded_aux[:,:,-6:-3]
+                U_ub,aux_ub = slip_wall.up(U_ub,aux_ub)
+                U_with_ub,aux_with_ub = replace_ub(U_ub,aux_ub,padded_U,padded_aux)
+                return U_with_ub,aux_with_ub
+        elif boundary_config['up_boundary'] == 'periodic':
+            def up_boundary(padded_U,padded_aux):
+                return padded_U,padded_aux
+        elif boundary_config['up_boundary'] == 'neumann':
+            def up_boundary(padded_U,padded_aux):
+                U_ub,aux_ub = padded_U[:,:,-6:-3],padded_aux[:,:,-6:-3]
+                U_ub,aux_ub = neumann.up(U_ub,aux_ub)
+                U_with_ub,aux_with_ub = replace_ub(U_ub,aux_ub,padded_U,padded_aux)
+                return U_with_ub,aux_with_ub
+        elif boundary_config['up_boundary'] == 'pressure_outlet':
+            def up_boundary(padded_U,padded_aux):
+                U_ub,aux_ub = padded_U[:,:,-6:-3],padded_aux[:,:,-6:-3]
+                U_ub,aux_ub = pressure_outlet.up(U_ub,aux_ub)
+                U_with_ub,aux_with_ub = replace_ub(U_ub,aux_ub,padded_U,padded_aux)
+                return U_with_ub,aux_with_ub
+            
+    boundary_func['up_boundary'] = up_boundary
+
+
+def boundary_conditions(U, aux):
+    U_periodic_pad,aux_periodic_pad = pad(U,aux)
+    U_with_lb,aux_with_lb = boundary_func['left_boundary'](U_periodic_pad,aux_periodic_pad)
+    U_with_rb,aux_with_rb = boundary_func['right_boundary'](U_with_lb,aux_with_lb)
+    U_with_bb,aux_with_bb = boundary_func['bottom_boundary'](U_with_rb,aux_with_rb)
+    U_with_ghost_cell,aux_with_ghost_cell = boundary_func['up_boundary'](U_with_bb,aux_with_bb)
     return U_with_ghost_cell,aux_with_ghost_cell
 
-##parallel settings##
-num_devices = jax.local_device_count()
-devices = jax.devices()
-
-
-def exchange_halo(device_grid):
-    _, grid_nx, _ = device_grid.shape
-    halo_size = 3
-
-    send_right = device_grid[:,-halo_size:,:] #向右发送的数据
-    recv_left = jax.lax.ppermute(send_right,'x',[(i,(i+1)%num_devices) for i in range(num_devices)])
-
-    send_left = device_grid[:,:halo_size,:] #向左发送的数据
-    recv_right = jax.lax.ppermute(send_left,'x',[(i,(i-1)%num_devices) for i in range(num_devices)])
-
-    new_grid = jnp.concatenate([recv_left,device_grid,recv_right],axis=1)
-    return new_grid
-
-
-def parallel_boundary_conditions(U,aux):
-    device_idx = jax.lax.axis_index('x')
-    field = jnp.concatenate([U,aux],axis=0)
-    field_periodic_x = exchange_halo(field)
-    field_periodic_pad = jnp.concatenate([field_periodic_x[:,:,-4:-3],field_periodic_x[:,:,-3:-2],field_periodic_x[:,:,-2:-1],field_periodic_x,field_periodic_x[:,:,1:2],field_periodic_x[:,:,2:3],field_periodic_x[:,:,3:4]],axis=2)
-    U_periodic_pad,aux_periodic_pad = field_periodic_pad[0:-2],field_periodic_pad[-2:]
-    U_with_lb,aux_with_lb = jax.lax.cond(device_idx==0,lambda:usr_boundary_func['left_boundary'](U_periodic_pad),lambda:(U_periodic_pad,aux_periodic_pad))
-    U_with_rb,aux_with_rb = jax.lax.cond(device_idx==(num_devices-1),lambda:usr_boundary_func['right_boundary'](U_with_lb,aux_with_lb),lambda:(U_with_lb,aux_with_lb))
-    U_with_bb,aux_with_bb = usr_boundary_func['bottom_boundary'](U_with_rb,aux_with_rb)
-    U_with_ghost_cell,aux_with_ghost_cell = usr_boundary_func['up_boundary'](U_with_bb,aux_with_bb)
-    return U_with_ghost_cell,aux_with_ghost_cell
-
-
-def split_and_distribute_data(grid):
-    grid_list = jnp.array(jnp.split(grid,num_devices,axis=1))
-    return grid_list
