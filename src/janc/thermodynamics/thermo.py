@@ -136,7 +136,7 @@ def e_eqn(T, e, Y):
     ddres_dT2 = dcp
     return res, dres_dT, ddres_dT2, gamma
 
-@custom_vjp
+#@custom_vjp
 def get_T_nasa7(e,Y,initial_T):
     
     initial_res, initial_de_dT, initial_d2e_dT2, initial_gamma = e_eqn(initial_T,e,Y)
@@ -190,7 +190,7 @@ def get_T_bwd(res, g):
         
     return (dL_de, dL_dY, jnp.zeros_like(T))
     
-get_T_nasa7.defvjp(get_T_fwd, get_T_bwd)
+#get_T_nasa7.defvjp(get_T_fwd, get_T_bwd)
 
 def get_thermo_constant_gamma(T, Y):
     R = get_R(Y)
