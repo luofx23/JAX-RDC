@@ -188,7 +188,7 @@ def get_T_bwd(res, g):
     dL_de = dL_dgamma*dgamma_de + dL_dT*dT_de
     dL_dY = dL_dgamma*dgamma_dY + dL_dT*dT_dY
         
-    return (vjp_e, vjp_Y, jnp.zeros_like(T))
+    return (dL_de, dL_dY, jnp.zeros_like(T))
     
 get_T_nasa7.defvjp(get_T_fwd, get_T_bwd)
 
