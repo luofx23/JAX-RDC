@@ -136,7 +136,7 @@ def e_eqn(T, e, Y):
     ddres_dT2 = dcp
     return res, dres_dT, ddres_dT2, gamma
 
-#@custom_vjp
+@custom_vjp
 def get_T_nasa7(e,Y,initial_T):
     
     initial_res, initial_de_dT, initial_d2e_dT2, initial_gamma = e_eqn(initial_T,e,Y)
@@ -145,7 +145,7 @@ def get_T_nasa7(e,Y,initial_T):
         res, de_dT, d2e_dT2, T, gamma, i = args
         return (jnp.max(jnp.abs(res)) > tol) & (i < max_iter)
 
-    def body_fun(dead, args):
+    def body_fun(args):
         res, de_dT, d2e_dT2, T, gamma, i = args
         delta_T = -2*res*de_dT/(2*jnp.power(de_dT,2)-res*d2e_dT2)
         T_new = T + delta_T
@@ -153,7 +153,7 @@ def get_T_nasa7(e,Y,initial_T):
         return res_new, de_dT_new, d2e_dT2_new, T_new, gamma_new, i + 1
 
     initial_state = (initial_res, initial_de_dT, initial_d2e_dT2, initial_T, initial_gamma, 0)
-    _, _, _, T_final, gamma_final, it = lax.fori_loop(0, 5, body_fun, initial_state)
+    _, _, _, T_final, gamma_final, it = lax.while_loop(cond_fun, body_fun, initial_state)
     return jnp.concatenate([gamma_final, T_final],axis=0)
     
 def get_T_fwd(e,Y,initial_T):
@@ -187,10 +187,11 @@ def get_T_bwd(res, g):
     
     dL_de = dL_dgamma*dgamma_de + dL_dT*dT_de
     dL_dY = dL_dgamma*dgamma_dY + dL_dT*dT_dY
-        
+    
+    
     return (dL_de, dL_dY, jnp.zeros_like(T))
     
-#get_T_nasa7.defvjp(get_T_fwd, get_T_bwd)
+get_T_nasa7.defvjp(get_T_fwd, get_T_bwd)
 
 def get_thermo_constant_gamma(T, Y):
     R = get_R(Y)
