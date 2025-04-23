@@ -8,18 +8,14 @@ dependencies: jax & cantera(python version)
 """
 
 import jax.numpy as jnp
-from jax import vmap,lax#,custom_vjp 
+from jax import vmap,lax,custom_vjp 
 from ..preprocess import nondim
 from ..preprocess.load import read_reaction_mechanism, get_cantera_coeffs
 import os
 
-T0 = nondim.T0
-M0 = nondim.M0
+
 max_iter = 5
 tol = 5e-9
-
-initial_T = 300.0
-gamma = 1.29
 
 species_M = None
 Mex = None
@@ -40,45 +36,45 @@ n = None
 thermo_settings={'thermo_model':'nasa7'}
 ReactionParams = {}
 
-def set_thermo(set_dict):
+def set_thermo(thermo_config,nondim_config=None):
     global ReactionParams,thermo_settings,n,species_M,Mex,Tcr,cp_cof_low,cp_cof_high,dcp_cof_low,dcp_cof_high,h_cof_low,h_cof_high,h_cof_low_chem,h_cof_high_chem,s_cof_low,s_cof_high,logcof_low,logcof_high
     
-    if set_dict['is_detailed_chemistry']:
-        assert 'mechanism_diretory' in set_dict,"You choosed detailed chemistry without specifying the diretory of your mechanism files, please specify 'chemistry_mechanism_diretory' in your dict of settings"
-        _, ext = os.path.splitext(set_dict['mechanism_diretory'])
+    if thermo_config['is_detailed_chemistry']:
+        assert 'mechanism_diretory' in thermo_config,"You choosed detailed chemistry without specifying the diretory of your mechanism files, please specify 'chemistry_mechanism_diretory' in your dict of settings"
+        _, ext = os.path.splitext(thermo_config['mechanism_diretory'])
         assert ext.lower() == '.yaml', "janc only read mech file with 【.yaml】 format, check https://cantera.org/3.1/userguide/ck2yaml-tutorial.html for more details"
         
         
-        assert set_dict['thermo_model']=='nasa7',"detailed chemistry requires thermo model to be 'nasa7'."
-        if not os.path.isfile(set_dict['mechanism_diretory']):
+        assert thermo_config['thermo_model']=='nasa7',"detailed chemistry requires thermo model to be 'nasa7'."
+        if not os.path.isfile(thermo_config['mechanism_diretory']):
             raise FileNotFoundError('No mechanism file detected in the specified directory.')
     else:
-        assert 'species' in set_dict, "A list of strings containing the name of the species must be provided in the dict of settings with key name 'species'. Example:['H2','O2',...]."
+        assert 'species' in thermo_config, "A list of strings containing the name of the species must be provided in the dict of settings with key name 'species'. Example:['H2','O2',...]."
     
-    if set_dict['thermo_model']=='nasa7':
-        assert 'mechanism_diretory' in set_dict,"Please provide the name of the nasa7_mech which can be identified by cantera (for example, 'gri30.yaml'), or the diretory of your own nasa7 mech (for example, '/content/my_own_mech.yaml')."
-        _, ext = os.path.splitext(set_dict['mechanism_diretory'])
+    if thermo_config['thermo_model']=='nasa7':
+        assert 'mechanism_diretory' in thermo_config,"Please provide the name of the nasa7_mech which can be identified by cantera (for example, 'gri30.yaml'), or the diretory of your own nasa7 mech (for example, '/content/my_own_mech.yaml')."
+        _, ext = os.path.splitext(thermo_config['mechanism_diretory'])
         assert ext.lower() == '.yaml', "janc only read mech file with 【.yaml】 format. If you have standalone thermo data with 【.dat】 format, use 【ck2yaml --thermo=therm.dat】 in cantera to convert your file to 【.yaml】 format."
     else:
-        if set_dict['thermo_model']=='constant_gamma':
-            assert 'gamma' in set_dict, "The constant_gamma model require the value of gamma to be specified in the setting dict with key name 'gamma'."
+        if thermo_config['thermo_model']=='constant_gamma':
+            assert 'gamma' in thermo_config, "The constant_gamma model require the value of gamma to be specified in the setting dict with key name 'gamma'."
         else:
             raise RuntimeError("The thermo model you specified is not supported, only 'nasa7' or 'constant_gamma' can be specified.")
             
-    if set_dict['is_detailed_chemistry']:
-        ReactionParams = read_reaction_mechanism(set_dict['mechanism_diretory'])
-        mech = set_dict['mechanism_diretory']
+    if thermo_config['is_detailed_chemistry']:
+        ReactionParams = read_reaction_mechanism(thermo_config['mechanism_diretory'],nondim_config)
+        mech = thermo_config['mechanism_diretory']
         species_list = ReactionParams['species']
         ns = ReactionParams['num_of_species']
         ni = ReactionParams['num_of_inert_species']
         n = ns - ni
     else:
-        species_list = set_dict['species']
-        mech = set_dict['mechanism_diretory']
+        species_list = thermo_config['species']
+        mech = thermo_config['mechanism_diretory']
         n = len(species_list)
     
-    species_M,Mex,Tcr,cp_cof_low,cp_cof_high,dcp_cof_low,dcp_cof_high,h_cof_low,h_cof_high,h_cof_low_chem,h_cof_high_chem,s_cof_low,s_cof_high,logcof_low,logcof_high = get_cantera_coeffs(species_list,mech)
-    thermo_settings = set_dict
+    species_M,Mex,Tcr,cp_cof_low,cp_cof_high,dcp_cof_low,dcp_cof_high,h_cof_low,h_cof_high,h_cof_low_chem,h_cof_high_chem,s_cof_low,s_cof_high,logcof_low,logcof_high = get_cantera_coeffs(species_list,mech,nondim_config)
+    thermo_settings = thermo_config
 
 
 def fill_Y(Y):
@@ -103,7 +99,7 @@ def get_thermo_properties_single(Tcr,cp_cof_low,cp_cof_high,dcp_cof_low,dcp_cof_
 def get_gibbs_single(Tcr,h_cof_low,h_cof_high,s_cof_low,s_cof_high,logcof_low,logcof_high,T):
     mask = T<Tcr
     h = jnp.where(mask, jnp.polyval(h_cof_low, T), jnp.polyval(h_cof_high, T))
-    s = jnp.where(mask, jnp.polyval(s_cof_low, T) + logcof_low*jnp.log(T0*T), jnp.polyval(s_cof_high, T) + logcof_high*jnp.log(T0*T))
+    s = jnp.where(mask, jnp.polyval(s_cof_low, T) + logcof_low*jnp.log((nondim.T0)*T), jnp.polyval(s_cof_high, T) + logcof_high*jnp.log((nondim.T0)*T))
     g = s - h/T
     return g
 
@@ -140,7 +136,7 @@ def e_eqn(T, e, Y):
     ddres_dT2 = dcp
     return res, dres_dT, ddres_dT2, gamma
 
-#@custom_vjp
+@custom_vjp
 def get_T_nasa7(e,Y,initial_T):
     
     initial_res, initial_de_dT, initial_d2e_dT2, initial_gamma = e_eqn(initial_T,e,Y)
@@ -158,25 +154,40 @@ def get_T_nasa7(e,Y,initial_T):
 
     initial_state = (initial_res, initial_de_dT, initial_d2e_dT2, initial_T, initial_gamma, 0)
     _, _, _, T_final, gamma_final, it = lax.while_loop(cond_fun, body_fun, initial_state)
-    return T_final, gamma_final
+    return jnp.concatenate([gamma_final, T_final],axis=0)
     
-    #def get_T_fwd(e,Y,initial_T):
-    #    T_final, gamma_final = get_T(e,Y,initial_T)
-    #    return (T_final, gamma_final), (T_final,e, Y)
+def get_T_fwd(e,Y,initial_T):
+    aux_new = get_T_nasa7(e,Y,initial_T)
+    return aux_new, (e,Y,aux_new)
     
-    #def get_T_bwd(res, g):
-    #    T_final, e, Y = res
-    #    cp, gamma, h, R, dcp = get_thermo(T_final,Y)
-    #    cv = cp - R
-    #    dTde = 1/cv
+def get_T_bwd(res, g):
+    e, Y, aux_new = res
+    T = aux_new[1:2]
+    cp, _, h, R, dcp_dT = get_thermo(T,Y)
+    cv = cp - R
+    dcv_dT = dcp_dT
+    dT_de = 1/cv
     
-    #    _, _, h_i = get_thermo_properties(T_final[0])
-    #    e_i = h_i - 1/Mex*T_final
-    #    dTdY = -e_i/cv
+    dgamma_dT = (dcp_dT*cv-dcv_dT*cp)/(cv**2)
+    dgamma_de = dgamma_dT*dT_de
+    
+    cp_i, dcp_i_dT, h_i = get_thermo_properties(T[0])
+    e_i = h_i - 1/Mex*T
+    dT_dY = (-e_i[0:-1]+e_i[-1:])/cv
+    
+    dR_dY = 1/Mex[0:-1]-1/Mex[-1:]
+    dcp_dY = cp_i[0:-1]-cp_i[-1:]
+    dcv_dY = dcp_dY - dR_dY
+    
+    dgamma_dY = (dcp_dY*cv-dcv_dY*cp)/(cv**2)
+    dgamma_dY = dgamma_dT*dT_dY + dgamma_dY
+    
+    vjp_e = jnp.concatenate([g[0:1]*dgamma_de,g[1:2]*dT_de],axis=0)
+    vjp_Y = jnp.concatenate([g[0:1]*dgamma_dY,g[1:2]*dT_dY],axis=0)
         
-    #    return (g * dTde, g * dTdY, jnp.zeros_like(T_final))
+    return (vjp_e, vjp_Y, jnp.zeros_like(T))
     
-    #get_T.defvjp(get_T_fwd, get_T_bwd)
+get_T_nasa7.defvjp(get_T_fwd, get_T_bwd)
 
 def get_thermo_constant_gamma(T, Y):
     R = get_R(Y)
@@ -193,7 +204,7 @@ def get_T_constant_gamma(e,Y,initial_T=None):
     R = get_R(Y)
     T_final = e/(R/(gamma-1))
     gamma_final = jnp.full_like(e,gamma)
-    return T_final, gamma_final
+    return jnp.concatenate([gamma_final, T_final],axis=0)
 
 get_thermo_func_dict = {'nasa7':get_thermo_nasa7,
                         'constant_gamma':get_thermo_constant_gamma}
