@@ -182,8 +182,11 @@ def get_T_bwd(res, g):
     dgamma_dY = (dcp_dY*cv-dcv_dY*cp)/(cv**2)
     dgamma_dY = dgamma_dT*dT_dY + dgamma_dY
     
-    vjp_e = jnp.concatenate([g[0:1]*dgamma_de,g[1:2]*dT_de],axis=0)
-    vjp_Y = jnp.concatenate([g[0:1]*dgamma_dY,g[1:2]*dT_dY],axis=0)
+    dL_dgamma = g[0:1]
+    dL_dT = g[1:2]
+    
+    dL_de = dL_dgamma*dgamma_de + dL_dT*dT_de
+    dL_dY = dL_dgamma*dgamma_dY + dL_dT*dT_dY
         
     return (vjp_e, vjp_Y, jnp.zeros_like(T))
     
