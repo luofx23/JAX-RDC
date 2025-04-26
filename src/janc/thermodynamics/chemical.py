@@ -39,8 +39,8 @@ def reactionConstant_i(T, X, i, k, n):
     vb_in = jnp.expand_dims(vb_i[n,:,:],0)
     vf_in = jnp.expand_dims(vf_i[n,:,:],0)
     X_without_Xn = X.at[n].set(1.0)
-    kf_without_Xn = kf_i*jnp.prod(jnp.power(X_without_Xn,vf_i),axis=0,keepdims=True))
-    kb_without_Xn = kb_i*jnp.prod(jnp.power(X_without_Xn,vb_i),axis=0,keepdims=True))
+    kf_without_Xn = kf_i*jnp.prod(jnp.power(X_without_Xn,vf_i),axis=0,keepdims=True)
+    kb_without_Xn = kb_i*jnp.prod(jnp.power(X_without_Xn,vb_i),axis=0,keepdims=True)
     kf = kf_without_Xn*(jnp.power(Xn,vf_in))
     kb = kb_without_Xn*(jnp.power(Xn,vb_in))
     
