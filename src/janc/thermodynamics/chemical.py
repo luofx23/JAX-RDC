@@ -76,7 +76,9 @@ def solve_implicit_rate(T,rho,Y,dt):
     rhoY = rho*Y
     X = rhoY/(thermo.Mex)
     A, b = construct_matrix_equation(T,X,dt)
-    dY = jnp.linalg.solve(A,b)
-    dY = jnp.transpose(dY[:,:,:,0],(2,0,1))
-    return dY
+    drhoY = jnp.linalg.solve(A,b)
+    drhoY = jnp.transpose(drhoY[:,:,:,0],(2,0,1))
+    dY = drhoY/rho
+    dY = jnp.clip(dY,min=-Y[0:-1],max=1-Y[0:-1])
+    return rho*dY
 
