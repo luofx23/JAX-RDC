@@ -21,9 +21,9 @@ def reactionConstant_i(T, X, i, k, n):
     B = thermo.ReactionParams["B"][i]
     EakOverRu = thermo.ReactionParams["Ea/Ru"][i]
     vf_i = thermo.ReactionParams["vf"][i,:,:,:]
-    vf_i = jnp.clip(vf_i.at[:,n,:,:].set(vf_i[:,n,:,:]-1),0)
+    vf_i = jnp.clip(vf_i.at[n,:,:].set(vf_i[n,:,:]-1),0)
     vb_i = thermo.ReactionParams["vb"][i,:,:,:]
-    vb_i = jnp.clip(vb_i.at[:,n,:,:].set(vb_i[:,n,:,:]-1),0)
+    vb_i = jnp.clip(vb_i.at[n,:,:].set(vb_i[n,:,:]-1),0)
     vf_ik = vf_i[k,:,:]
     vb_ik = vb_i[k,:,:]
     vsum = thermo.ReactionParams["vsum"][i]
