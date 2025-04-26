@@ -30,7 +30,7 @@ def reactionConstant_i(T, X, i, k, n):
 
     kf_i = A*jnp.power(T,B)*jnp.exp(-EakOverRu/T)
     aij_X_sum = jnp.sum(aij*X,axis=0,keepdims=True)
-    aij_X_sum = jnp.clip(aij_X_sum, max=1.0)
+    aij_X_sum = jnp.clip(aij_X_sum, min=1.0)
     log_X = jnp.log(X[0:thermo.n,:,:])
     kf = kf_i*jnp.exp(jnp.sum(vf_i*log_X,axis=0,keepdims=True))
     
