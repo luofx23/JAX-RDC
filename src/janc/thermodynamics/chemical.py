@@ -33,14 +33,9 @@ def reactionConstant_i(T, X, i, k, n):
     aij_X_sum = jnp.sum(aij*X,axis=0,keepdims=True)
     aij_X_sum = jnp.maximum(aij_X_sum, jnp.ones_like(aij_X_sum))
     X = X[0:thermo.n,:,:]
-    log_X = jnp.log(X)
-    kf = kf_i*jnp.exp(jnp.sum(vf_i*log_X,axis=0,keepdims=True))
+    kf = kf_i*jnp.prod(jnp.power(X,vf_i),axis=0,keepdims=True)
     
-    #cond = ReactionParams["is_reverse"][i]
-    #kb = lax.cond(cond,
-                  #lambda:kf_i/(jnp.exp(jnp.sum((vb_i-vf_i)*(get_gibbs(T[0,:,:])),axis=0,keepdims=True))*((101325/P0/T)**vsum))*jnp.exp(jnp.sum(vb_i*log_X,axis=0,keepdims=True)),
-                  #lambda:jnp.zeros_like(kf))
-    kb = kf_i/(jnp.exp(jnp.sum((vb_i-vf_i)*(thermo.get_gibbs(T[0,:,:])),axis=0,keepdims=True))*((101325/nondim.P0/T)**vsum))*jnp.exp(jnp.sum(vb_i*log_X,axis=0,keepdims=True))
+    kb = kf_i/(jnp.exp(jnp.sum((vb_i-vf_i)*(thermo.get_gibbs(T[0,:,:])),axis=0,keepdims=True))*((101325/nondim.P0/T)**vsum))*jnp.prod(jnp.power(X,vb_i),axis=0,keepdims=True)
     
     w_kOverM_i = (vb_ik-vf_ik)*aij_X_sum*(kf-kb)
     vb_in = vb_i[n]
