@@ -29,20 +29,18 @@ def reactionConstant_i(T, X, i, k, n):
 
 
     kf_i = A*jnp.power(T,B)*jnp.exp(-EakOverRu/T)
-    kb_i = kf_i/(jnp.exp(jnp.sum((vb_i-vf_i)*(thermo.get_gibbs(T[0,:,:])),axis=0,keepdims=True))*((101325/nondim.P0/T)**vsum))
-   
+    X = jnp.maximum(X,1e-20*jnp.ones_like(X))
     aij_X_sum = jnp.sum(aij*X,axis=0,keepdims=True)
     aij_X_sum = jnp.maximum(aij_X_sum, jnp.ones_like(aij_X_sum))
-    
     X = X[0:thermo.n,:,:]
-    Xn = jnp.expand_dims(X[n,:,:],0)
-    vb_in = jnp.expand_dims(vb_i[n,:,:],0)
-    vf_in = jnp.expand_dims(vf_i[n,:,:],0)
-    X_without_Xn = X.at[n].set(1.0)
-    kf_without_Xn = kf_i*jnp.prod(jnp.power(X_without_Xn,vf_i),axis=0,keepdims=True)
-    kb_without_Xn = kb_i*jnp.prod(jnp.power(X_without_Xn,vb_i),axis=0,keepdims=True)
-    kf = kf_without_Xn*(jnp.power(Xn,vf_in))
-    kb = kb_without_Xn*(jnp.power(Xn,vb_in))
+    log_X = jnp.log(X)
+    kf = kf_i*jnp.exp(jnp.sum(vf_i*log_X,axis=0,keepdims=True))
+    
+    #cond = ReactionParams["is_reverse"][i]
+    #kb = lax.cond(cond,
+                  #lambda:kf_i/(jnp.exp(jnp.sum((vb_i-vf_i)*(get_gibbs(T[0,:,:])),axis=0,keepdims=True))*((101325/P0/T)**vsum))*jnp.exp(jnp.sum(vb_i*log_X,axis=0,keepdims=True)),
+                  #lambda:jnp.zeros_like(kf))
+    kb = kf_i/(jnp.exp(jnp.sum((vb_i-vf_i)*(thermo.get_gibbs(T[0,:,:])),axis=0,keepdims=True))*((101325/nondim.P0/T)**vsum))*jnp.exp(jnp.sum(vb_i*log_X,axis=0,keepdims=True))
     
     w_kOverM_i = (vb_ik-vf_ik)*aij_X_sum*(kf-kb)
     vb_in = vb_i[n]
@@ -50,10 +48,7 @@ def reactionConstant_i(T, X, i, k, n):
     ain = thermo.ReactionParams["third_body_coeffs"][i,n]
     Mn = thermo.species_M[n]
     Xn = jnp.expand_dims(X[n,:,:],0)
-    vf_in_minus_one = jnp.maximum(vf_in-1,jnp.zeros_like(vf_in))
-    vb_in_minus_one = jnp.maximum(vb_in-1,jnp.zeros_like(vb_in))
-    dwk_drhonYn_OverMk_i = (vb_ik-vf_ik)*(kf-kb)*ain/Mn \
-                          + 1/(Mn)*(vb_ik-vf_ik)*aij_X_sum*(vf_in*kf_without_Xn*(jnp.power(Xn,vf_in_minus_one))-vb_in*kb_without_Xn*(jnp.power(Xn,vb_in_minus_one)))
+    dwk_drhonYn_OverMk_i = (vb_ik-vf_ik)*(kf-kb)*ain/Mn + 1/(Mn*Xn)*(vb_ik-vf_ik)*aij_X_sum*(vf_in*kf-vb_in*kb)
 
     return w_kOverM_i, dwk_drhonYn_OverMk_i
 
