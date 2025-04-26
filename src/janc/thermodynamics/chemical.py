@@ -31,7 +31,7 @@ def reactionConstant_i(T, X, i, k, n):
 
     kf_i = A*jnp.power(T,B)*jnp.exp(-EakOverRu/T)
     aij_X_sum = jnp.sum(aij*X,axis=0,keepdims=True)
-    aij_X_sum = jnp.clip(aij_X_sum, min=1-is_third_body)
+    aij_X_sum = is_third_body*aij_X_sum + (1-is_third_body)
     log_X = jnp.log(X[0:thermo.n,:,:])
     kf = kf_i*jnp.exp(jnp.sum(vf_i*log_X,axis=0,keepdims=True))
     
@@ -42,9 +42,11 @@ def reactionConstant_i(T, X, i, k, n):
     vb_in = vb_i[n]
     vf_in = vf_i[n]
     ain = thermo.ReactionParams["third_body_coeffs"][i,n]
+    aiN2 = thermo.ReactionParams["third_body_coeffs"][i,-1]
     Mn = thermo.species_M[n]
+    MN2 = thermo.species_M[-1]
     Xn = jnp.expand_dims(X[n,:,:],0)
-    dwk_drhonYn_OverMk_i = (vb_ik-vf_ik)*(kf-kb)*ain/Mn + 1/(Mn*Xn)*(vb_ik-vf_ik)*aij_X_sum*(vf_in*kf-vb_in*kb)
+    dwk_drhonYn_OverMk_i = (vb_ik-vf_ik)*(kf-kb)*((ain/Mn)-(aiN2/MN2)) + 1/(Mn*Xn)*(vb_ik-vf_ik)*aij_X_sum*(vf_in*kf-vb_in*kb)
 
     return w_kOverM_i, dwk_drhonYn_OverMk_i
 
