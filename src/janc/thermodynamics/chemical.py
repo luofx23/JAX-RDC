@@ -72,7 +72,7 @@ def construct_matrix_equation(T,X,dt):
 
 @jit
 def solve_implicit_rate(T,rho,Y,dt):
-    Y = thermo.fill_Y(jnp.clip(Y,1e-20,1.0))
+    Y = thermo.fill_Y(jnp.clip(Y,1e-50,1.0))
     rhoY = rho*Y
     X = rhoY/(thermo.Mex)
     A, b = construct_matrix_equation(T,X,dt)
