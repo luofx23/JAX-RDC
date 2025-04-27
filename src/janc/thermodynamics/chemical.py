@@ -32,6 +32,7 @@ def reactionConstant_i(T, X, i, k, n):
     kf_i = A*jnp.power(T,B)*jnp.exp(-EakOverRu/T)
     aij_X_sum = jnp.sum(aij*X,axis=0,keepdims=True)
     aij_X_sum = is_third_body*aij_X_sum + (1-is_third_body)
+    X = jnp.clip(X,min = 1e-50)
     log_X = jnp.log(X[0:thermo.n,:,:])
     kf = kf_i*jnp.exp(jnp.sum(vf_i*log_X,axis=0,keepdims=True))
     
@@ -72,7 +73,7 @@ def construct_matrix_equation(T,X,dt):
 
 @jit
 def solve_implicit_rate(T,rho,Y,dt):
-    Y = thermo.fill_Y(jnp.clip(Y,1e-50,1.0))
+    Y = thermo.fill_Y(Y)
     rhoY = rho*Y
     X = rhoY/(thermo.Mex)
     A, b = construct_matrix_equation(T,X,dt)
