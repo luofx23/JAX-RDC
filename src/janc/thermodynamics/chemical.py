@@ -68,8 +68,7 @@ def construct_matrix_equation(T,X,dt):
     dwk_drhonYn = dwk_drhonYn[0:-1,0:-1,:,:]
     S = jnp.transpose(w_k,(2,3,0,1))
     DSDU = jnp.transpose(dwk_drhonYn,(2,3,0,1))
-    Idim = (thermo.n)
-    I = jnp.eye(thermo.n)
+    I = thermo.I
     A = I/dt - DSDU
     b = S
     return A, b
