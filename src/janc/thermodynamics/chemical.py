@@ -61,14 +61,12 @@ def reaction_rate_with_derievative(T,X,k,n):
 
 def construct_matrix_equation(T,X,dt):
     matrix_fcn = vmap(vmap(reaction_rate_with_derievative,in_axes=(None,None,None,0)),in_axes=(None,None,0,None))
-    k = jnp.arange(thermo.n)
-    n = jnp.arange(thermo.n)
+    k = thermo.k_mat
+    n = thermo.n_mat
     w_k, dwk_drhonYn = matrix_fcn(T,X,k,n)
-    #w_k = w_k[0:-1,:,:,:]
-    #dwk_drhonYn = dwk_drhonYn[0:-1,0:-1,:,:]
     S = jnp.transpose(w_k[:,0:1,:,:],(2,3,0,1))
     DSDU = jnp.transpose(dwk_drhonYn,(2,3,0,1))
-    I = jnp.eye(thermo.n)
+    I = thermo.I
     A = I/dt - DSDU
     b = S
     return A, b
@@ -79,9 +77,9 @@ def solve_implicit_rate(T,rho,Y,dt):
     rhoY = rho*Y
     X = rhoY/(thermo.Mex)
     A, b = construct_matrix_equation(T,X,dt)
-    drhoY = jnp.linalg.solve(A,b)
-    drhoY = jnp.transpose(drhoY[:,:,:,0],(2,0,1))
-    #drhoY = jnp.concatenate([drhoY,-jnp.sum(drhoY,axis=0,keepdims=True)],axis=0)
+    x = jnp.linalg.solve(A,b)
+    x = jnp.transpose(x[:,:,:,0],(2,0,1))
+    drhoY = jnp.concatenate([x,-jnp.sum(x,axis=0,keepdims=True)],axis=0)
     dY = drhoY/rho
     dY = jnp.clip(dY,min=-Y[0:-1],max=1-Y[0:-1])
     return rho*dY
