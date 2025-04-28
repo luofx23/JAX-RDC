@@ -81,7 +81,7 @@ def solve_implicit_rate(T,rho,Y,dt):
     A, b = construct_matrix_equation(T,X,dt)
     drhoY = jnp.linalg.solve(A,b)
     drhoY = jnp.transpose(drhoY[:,:,:,0],(2,0,1))
-    drhoY = jnp.concatenate([drhoY,0-drhoY],axis=0)
+    drhoY = jnp.concatenate([drhoY,-jnp.sum(drhoY,axis=0,keepdims=True)],axis=0)
     dY = drhoY/rho
     dY = jnp.clip(dY,min=-Y[0:-1],max=1-Y[0:-1])
     return rho*dY
