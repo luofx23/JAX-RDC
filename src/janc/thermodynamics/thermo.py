@@ -35,11 +35,10 @@ logcof_high = None
 n = None
 thermo_settings={'thermo_model':'nasa7'}
 ReactionParams = {}
-I = None
-n_range = None
-k_range = None
+nn = None
+
 def set_thermo(thermo_config,nondim_config=None):
-    global k_range,n_range,I,ReactionParams,thermo_settings,n,species_M,Mex,Tcr,cp_cof_low,cp_cof_high,dcp_cof_low,dcp_cof_high,h_cof_low,h_cof_high,h_cof_low_chem,h_cof_high_chem,s_cof_low,s_cof_high,logcof_low,logcof_high
+    global nn,ReactionParams,thermo_settings,n,species_M,Mex,Tcr,cp_cof_low,cp_cof_high,dcp_cof_low,dcp_cof_high,h_cof_low,h_cof_high,h_cof_low_chem,h_cof_high_chem,s_cof_low,s_cof_high,logcof_low,logcof_high
     
     if thermo_config['is_detailed_chemistry']:
         assert 'mechanism_diretory' in thermo_config,"You choosed detailed chemistry without specifying the diretory of your mechanism files, please specify 'chemistry_mechanism_diretory' in your dict of settings"
@@ -70,16 +69,12 @@ def set_thermo(thermo_config,nondim_config=None):
         ns = ReactionParams['num_of_species']
         ni = ReactionParams['num_of_inert_species']
         n = ns - ni
-        n_range = jnp.arange(n-1)
-        k_range = jnp.arange(n-1)
-        I = jnp.eye(n-1)
+        nn = n - 1
     else:
         species_list = thermo_config['species']
         mech = thermo_config['mechanism_diretory']
         n = len(species_list)
-        n_range = jnp.arange(n-1)
-        k_range = jnp.arange(n-1)
-        I = jnp.eye(n-1)
+        nn = n - 1
     
     species_M,Mex,Tcr,cp_cof_low,cp_cof_high,dcp_cof_low,dcp_cof_high,h_cof_low,h_cof_high,h_cof_low_chem,h_cof_high_chem,s_cof_low,s_cof_high,logcof_low,logcof_high = get_cantera_coeffs(species_list,mech,nondim_config)
     thermo_settings = thermo_config
