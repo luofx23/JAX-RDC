@@ -61,12 +61,12 @@ def reaction_rate_with_derievative(T,X,k,n):
 
 def construct_matrix_equation(T,X,dt):
     matrix_fcn = vmap(vmap(reaction_rate_with_derievative,in_axes=(None,None,None,0)),in_axes=(None,None,0,None))
-    k = thermo.k_range
-    n = thermo.n_range
+    k = jnp.arange(thermo.nn)
+    n = jnp.arange(thermo.nn)
     w_k, dwk_drhonYn = matrix_fcn(T,X,k,n)
     S = jnp.transpose(w_k[:,0:1,:,:],(2,3,0,1))
     DSDU = jnp.transpose(dwk_drhonYn,(2,3,0,1))
-    I = thermo.I
+    I = jnp.eye(thermo.nn)
     A = I/dt - DSDU
     b = S
     return A, b
