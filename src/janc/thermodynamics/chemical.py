@@ -64,11 +64,11 @@ def construct_matrix_equation(T,X,dt):
     k = jnp.arange(thermo.n)
     n = jnp.arange(thermo.n)
     w_k, dwk_drhonYn = matrix_fcn(T,X,k,n)
-    w_k = w_k[0:-1,0:1,:,:]
-    dwk_drhonYn = dwk_drhonYn[0:-1,0:-1,:,:]
-    S = jnp.transpose(w_k,(2,3,0,1))
+    #w_k = w_k[0:-1,:,:,:]
+    #dwk_drhonYn = dwk_drhonYn[0:-1,0:-1,:,:]
+    S = jnp.transpose(w_k[:,0:1,:,:],(2,3,0,1))
     DSDU = jnp.transpose(dwk_drhonYn,(2,3,0,1))
-    I = thermo.I
+    I = jnp.eye(thermo.n)
     A = I/dt - DSDU
     b = S
     return A, b
@@ -81,7 +81,7 @@ def solve_implicit_rate(T,rho,Y,dt):
     A, b = construct_matrix_equation(T,X,dt)
     drhoY = jnp.linalg.solve(A,b)
     drhoY = jnp.transpose(drhoY[:,:,:,0],(2,0,1))
-    drhoY = jnp.concatenate([drhoY,-jnp.sum(drhoY,axis=0,keepdims=True)],axis=0)
+    #drhoY = jnp.concatenate([drhoY,-jnp.sum(drhoY,axis=0,keepdims=True)],axis=0)
     dY = drhoY/rho
     dY = jnp.clip(dY,min=-Y[0:-1],max=1-Y[0:-1])
     return rho*dY
