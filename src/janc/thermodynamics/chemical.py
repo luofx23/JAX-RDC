@@ -43,11 +43,11 @@ def reactionConstant_i(T, X, i, k, n):
     vb_in = vb_i[n]
     vf_in = vf_i[n]
     ain = thermo.ReactionParams["third_body_coeffs"][i,n]
-    aiN2 = thermo.ReactionParams["third_body_coeffs"][i,-1]
+    ai_last = thermo.ReactionParams["third_body_coeffs"][i,-1]
     Mn = thermo.species_M[n]
-    MN2 = thermo.species_M[-1]
+    M_last = thermo.species_M[-1]
     Xn = jnp.expand_dims(X[n,:,:],0)
-    dwk_drhonYn_OverMk_i = (vb_ik-vf_ik)*(kf-kb)*((ain/Mn)-(aiN2/MN2)) + 1/(Mn*Xn)*(vb_ik-vf_ik)*aij_X_sum*(vf_in*kf-vb_in*kb)
+    dwk_drhonYn_OverMk_i = (vb_ik-vf_ik)*(kf-kb)*((ain/Mn)-(ai_last/M_last)) + 1/(Mn*Xn)*(vb_ik-vf_ik)*aij_X_sum*(vf_in*kf-vb_in*kb)
 
     return w_kOverM_i, dwk_drhonYn_OverMk_i
 
@@ -64,9 +64,11 @@ def construct_matrix_equation(T,X,dt):
     k = jnp.arange(thermo.n)
     n = jnp.arange(thermo.n)
     w_k, dwk_drhonYn = matrix_fcn(T,X,k,n)
-    S = jnp.transpose(w_k[:,0:1,:,:],(2,3,0,1))
+    w_k = w_k[0:-1,0:1,:,:]
+    dwk_drhonYn = dwk_drhonYn[0:-1,0:-1,:,:]
+    S = jnp.transpose(w_k,(2,3,0,1))
     DSDU = jnp.transpose(dwk_drhonYn,(2,3,0,1))
-    I = jnp.eye(thermo.n)
+    I = jnp.eye(thermo.n-1)
     A = I/dt - DSDU
     b = S
     return A, b
@@ -79,6 +81,7 @@ def solve_implicit_rate(T,rho,Y,dt):
     A, b = construct_matrix_equation(T,X,dt)
     drhoY = jnp.linalg.solve(A,b)
     drhoY = jnp.transpose(drhoY[:,:,:,0],(2,0,1))
+    drhoY = jnp.concatenate([drhoY,0-drhoY],axis=0)
     dY = drhoY/rho
     dY = jnp.clip(dY,min=-Y[0:-1],max=1-Y[0:-1])
     return rho*dY
