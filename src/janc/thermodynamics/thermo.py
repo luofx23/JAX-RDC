@@ -70,15 +70,15 @@ def set_thermo(thermo_config,nondim_config=None):
         ns = ReactionParams['num_of_species']
         ni = ReactionParams['num_of_inert_species']
         n = ns - ni
-        n_range = jnp.range(n-1)
-        k_range = jnp.range(n-1)
+        n_range = jnp.arange(n-1)
+        k_range = jnp.arange(n-1)
         I = jnp.eye(n-1)
     else:
         species_list = thermo_config['species']
         mech = thermo_config['mechanism_diretory']
         n = len(species_list)
-        n_range = jnp.range(n-1)
-        k_range = jnp.range(n-1)
+        n_range = jnp.arange(n-1)
+        k_range = jnp.arange(n-1)
         I = jnp.eye(n-1)
     
     species_M,Mex,Tcr,cp_cof_low,cp_cof_high,dcp_cof_low,dcp_cof_high,h_cof_low,h_cof_high,h_cof_low_chem,h_cof_high_chem,s_cof_low,s_cof_high,logcof_low,logcof_high = get_cantera_coeffs(species_list,mech,nondim_config)
