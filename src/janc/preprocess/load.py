@@ -21,8 +21,8 @@ def read_reaction_mechanism(file_path,nondim_config=None):
 
     non_zero_mask = jnp.any(vf + vb != 0, axis=0)
     zero_col_mask = jnp.all(vf + vb == 0, axis=0)
-    vf = vf[:,non_zero_mask]
-    vb = vb[:,non_zero_mask]
+    #vf = vf[:,non_zero_mask]
+    #vb = vb[:,non_zero_mask]
     inert_check = jnp.logical_or(~jnp.any(zero_col_mask),jnp.all(zero_col_mask[jnp.argmax(zero_col_mask):]))
     assert inert_check, "Inert species must be the last elements in species_list"
     num_of_inert_species = jnp.sum(zero_col_mask)
