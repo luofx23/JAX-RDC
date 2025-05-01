@@ -30,7 +30,7 @@ def U_to_prim(U):
     v = state[2:3,:,:]/rho
     p = (thermo.gamma-1)*(state[3:4,:,:]-0.5*rho*(u**2+v**2))
     a = jnp.sqrt(thermo.gamma*p/rho)
-    return rho,u,v,Y,p,a
+    return rho,u,v,p,a
 
 
 
