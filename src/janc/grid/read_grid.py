@@ -37,13 +37,13 @@ def compute_metrics(X, Y):
     
     #边界法向量计算
     #left_boundary
-    theta_L = jnp.atan(dy_deta[0,:]/dx_deta[0,:]) + jnp.pi/2
+    theta_L = jnp.atan(dy_deta[0,:]/dx_deta[0,:]) - jnp.pi/2
     #right_boundary
-    theta_R = jnp.atan(dy_deta[-1,:]/dx_deta[-1,:]) - jnp.pi/2
+    theta_R = jnp.atan(dy_deta[-1,:]/dx_deta[-1,:]) + jnp.pi/2
     #bottom_boundary
-    theta_B = jnp.atan(dy_dxi[:,0]/dx_dxi[:,0]) - jnp.pi/2
+    theta_B = jnp.atan(dy_dxi[:,0]/dx_dxi[:,0]) + jnp.pi/2
     #up_boundary
-    theta_U = jnp.atan(dy_dxi[:,-1]/dx_dxi[:,-1]) + jnp.pi/2
+    theta_U = jnp.atan(dy_dxi[:,-1]/dx_dxi[:,-1]) - jnp.pi/2
     
     nx_L = jnp.cos(theta_L)[None,None,:]
     ny_L = jnp.sin(theta_L)[None,None,:]
