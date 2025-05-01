@@ -17,8 +17,7 @@ def pressure_outlet(state_out,normal_vel,Pb):
     T_cor_out = jax.lax.select(mask, p_cor_out/(rho_cor_out*R_out),T_out)
     h_out = gamma_out*R_out*T_cor_out/(gamma_out-1)
     U_bd = jnp.concatenate([rho_cor_out, rho_cor_out * u_out, rho_cor_out * v_out,
-                      rho_cor_out*h_out - p_cor_out + 0.5 * rho_cor_out * (u_out ** 2 + v_out ** 2),
-                      rho_cor_out * Y_out], axis=0)
+                      rho_cor_out*h_out - p_cor_out + 0.5 * rho_cor_out * (u_out ** 2 + v_out ** 2)], axis=0)
     return U_bd
 
 def left(U_bd,theta):
