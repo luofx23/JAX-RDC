@@ -18,8 +18,8 @@ def splitFlux_LF(ixy, U):
     zx = (ixy == 1) * 1
     zy = (ixy == 2) * 1
     
-    F = jnp.concatenate([rho * u, rho * u ** 2 + p, rho * u * v, u * (rhoE + p), rho * u * Y], axis=0)
-    G = jnp.concatenate([rho * v, rho * u * v, rho * v ** 2 + p, v * (rhoE + p), rho * v * Y], axis=0)
+    F = jnp.concatenate([rho * u, rho * u ** 2 + p, rho * u * v, u * (rhoE + p)], axis=0)
+    G = jnp.concatenate([rho * v, rho * u * v, rho * v ** 2 + p, v * (rhoE + p)], axis=0)
     
     F_J = read_grid.J*(F*read_grid.dxi_dx+G*read_grid.dxi_dy)
     G_J = read_grid.J*(F*read_grid.deta_dx+G*read_grid.deta_dy)
