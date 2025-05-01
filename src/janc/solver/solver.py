@@ -41,8 +41,8 @@ def set_solver(thermo_set, boundary_set, grid_file = None, source_set = None, no
     
 
     @jit    
-    def advance_one_step(field,dx,dy,dt,theta=None):
-        field = advance_flux(field,dx,dy,dt,theta)
+    def advance_one_step(field,dt,theta=None):
+        field = advance_flux(field,dt,theta)
         return field
     
     print('solver is initialized successfully!')
