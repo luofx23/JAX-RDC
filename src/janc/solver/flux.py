@@ -12,7 +12,7 @@ C3 = 3 / 10
 
 @jit
 def splitFlux_LF(ixy, U):
-    rho,u,v,Y,p,a = aux_func.U_to_prim(U)
+    rho,u,v,p,a = aux_func.U_to_prim(U)
     rhoE = U[3:4,:,:]
 
     zx = (ixy == 1) * 1
