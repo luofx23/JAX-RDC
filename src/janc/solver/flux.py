@@ -1,6 +1,7 @@
 import jax.numpy as jnp
 from jax import jit
 from ..solver import aux_func
+from ..grid import read_grid
 
 p = 2
 eps = 1e-6
@@ -10,19 +11,34 @@ C3 = 3 / 10
 
 
 @jit
-def splitFlux_LF(ixy, U, aux):
-    rho,u,v,Y,p,a = aux_func.U_to_prim(U,aux)
+def splitFlux_LF(ixy, U):
+    rho,u,v,Y,p,a = aux_func.U_to_prim(U)
     rhoE = U[3:4,:,:]
 
     zx = (ixy == 1) * 1
     zy = (ixy == 2) * 1
+    
+    F = jnp.concatenate([rho * u, rho * u ** 2 + p, rho * u * v, u * (rhoE + p), rho * u * Y], axis=0)
+    G = jnp.concatenate([rho * v, rho * u * v, rho * v ** 2 + p, v * (rhoE + p), rho * v * Y], axis=0)
+    
+    F_J = read_grid.J*(F*read_grid.dxi_dx+G*read_grid.dxi_dy)
+    G_J = read_grid.J*(F*read_grid.deta_dx+G*read_grid.deta_dy)
 
-    F = zx*jnp.concatenate([rho * u, rho * u ** 2 + p, rho * u * v, u * (rhoE + p), rho * u * Y], axis=0) + zy*jnp.concatenate([rho * v, rho * u * v, rho * v ** 2 + p, v * (rhoE + p), rho * v * Y], axis=0)
-    um = jnp.nanmax(abs(u) + a)
-    vm = jnp.nanmax(abs(v) + a)
+    flux = zx*F_J + zy*G_J
+    
+    grad_xi = jnp.concatenate([read_grid.dxi_dx,read_grid.dxi_dy],axis=0)
+    grad_eta = jnp.concatenate([read_grid.deta_dx,read_grid.deta_dy],axis=0)
+    grad_xi_norm = jnp.sqrt(grad_xi[0:1]**2 + grad_xi[1:2]**2)
+    grad_eta_norm = jnp.sqrt(grad_eta[0:1]**2 + grad_eta[1:2]**2)
+    
+    u_J = read_grid.dxi_dx*u + read_grid.dxi_dy*v
+    v_J = read_grid.deta_dx*u + read_grid.deta_dy*v
+    
+    um = jnp.nanmax(abs(u_J) + a*grad_xi_norm)
+    vm = jnp.nanmax(abs(v_J) + a*grad_eta_norm)
     theta = zx*um + zy*vm
-    Hplus = 0.5 * (F + theta * U)
-    Hminus = 0.5 * (F - theta * U)
+    Hplus = 0.5 * (flux + theta * read_grid.J * U)
+    Hminus = 0.5 * (flux - theta * read_grid.J * U)
     return Hplus, Hminus
 
 @jit
@@ -148,9 +164,9 @@ def WENO_minus_y(f):
     return dfj
 
 @jit
-def weno5(U,aux,dx,dy):
-    Fplus, Fminus = splitFlux_LF(1, U, aux)
-    Gplus, Gminus = splitFlux_LF(2, U, aux)
+def weno5(U):
+    Fplus, Fminus = splitFlux_LF(1, U)
+    Gplus, Gminus = splitFlux_LF(2, U)
 
     dFp = WENO_plus_x(Fplus)
     dFm = WENO_minus_x(Fminus)
@@ -161,28 +177,6 @@ def weno5(U,aux,dx,dy):
     dF = dFp + dFm
     dG = dGp + dGm
 
-    netflux = dF/dx + dG/dy
+    netflux = dF/(read_grid.dxi) + dG/(read_grid.deta)
 
-    return -netflux
-
-@jit
-def weno5_amr(field,dx,dy):
-    
-    U,aux_old = field[0:-2],field[-2:]
-    aux = aux_func.update_aux(U,aux_old)
-    
-    Fplus, Fminus = splitFlux_LF(1, U, aux)
-    Gplus, Gminus = splitFlux_LF(2, U, aux)
-
-    dFp = WENO_plus_x(Fplus)
-    dFm = WENO_minus_x(Fminus)
-
-    dGp = WENO_plus_y(Gplus)
-    dGm = WENO_minus_y(Gminus)
-
-    dF = dFp + dFm
-    dG = dGp + dGm
-
-    netflux = dF/dx + dG/dy
-
-    return -netflux
+    return (-netflux)/read_grid.J[:,3:-3,3:-3]
