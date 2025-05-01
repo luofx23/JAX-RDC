@@ -93,7 +93,7 @@ def read_CGNS(file_path=None):
         if node_x is None or node_y is None:
             raise KeyError("在该 GridCoordinates 组下未找到 CoordinateX/CoordinateY")
         
-        X = node_x[1]
-        Y = node_y[1]
+        X = jnp.array(node_x[1])
+        Y = jnp.array(node_y[1])
         J, dxi_dx, deta_dx, dxi_dy, deta_dy, dxi, deta = compute_metrics(X, Y)
         nx_L, ny_L, nx_R, ny_R, nx_U, ny_U, nx_B, ny_B = compute_boundary_normal(X,Y)
