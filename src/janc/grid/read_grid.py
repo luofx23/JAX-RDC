@@ -34,33 +34,16 @@ def compute_metrics(X, Y):
 
     dy_deta = (Y[:,2:] - Y[:,:-2]) / (2*deta)
     dy_deta = jnp.concatenate([(Y[:,1:2]-Y[:,0:1])/deta,dy_deta,(Y[:,-1:]-Y[:,-2:-1])/deta],axis=1)
-    # Jacobian（内部节点）
-    J = dx_dxi * dy_deta - dx_deta * dy_dxi
-    dxi_dx = dy_deta/J
-    deta_dx = -dy_dxi/J
-    dxi_dy = -dx_deta/J
-    deta_dy = dx_dxi/J
     
-    J = jnp.pad(J,pad_width=(3,3),mode='edge')[None,:,:]
-    dxi_dx = jnp.pad(dxi_dx,pad_width=(3,3),mode='edge')[None,:,:]
-    deta_dx = jnp.pad(deta_dx,pad_width=(3,3),mode='edge')[None,:,:]
-    dxi_dy = jnp.pad(dxi_dy,pad_width=(3,3),mode='edge')[None,:,:]
-    deta_dy = jnp.pad(deta_dy,pad_width=(3,3),mode='edge')[None,:,:]
-    
-    return J, dxi_dx, deta_dx, dxi_dy, deta_dy, dxi, deta
-
-def compute_boundary_normal(X,Y):
-    Ni, Nj = X.shape
-    dxi = 1.0 / (Ni - 1)
-    deta = 1.0 / (Nj - 1)
+    #边界法向量计算
     #left_boundary
-    theta_L = jnp.atan((Y[0,1:]-Y[0,:-1])/(X[0,1:]-X[0,:-1])) + jnp.pi/2
+    theta_L = jnp.atan(dy_deta[0,:]/dx_deta[0,:]) + jnp.pi/2
     #right_boundary
-    theta_R = jnp.atan((Y[-1,1:]-Y[-1,:-1])/(X[-1,1:]-X[-1,:-1])) - jnp.pi/2
+    theta_R = jnp.atan(dy_deta[-1,:]/dx_deta[-1,:]) - jnp.pi/2
     #bottom_boundary
-    theta_B = jnp.atan((Y[1:,0]-Y[:-1,0])/(X[1:,0]-X[-1:,0])) - jnp.pi/2
+    theta_B = jnp.atan(dy_dxi[:,0]/dx_dxi[:,0]) - jnp.pi/2
     #up_boundary
-    theta_U = jnp.atan((Y[1:,-1]-Y[:-1,-1])/(X[1:,-1]-X[-1:,-1])) + jnp.pi/2
+    theta_U = jnp.atan(dy_dxi[:,-1]/dx_dxi[:,-1]) + jnp.pi/2
     
     nx_L = jnp.cos(theta_L)[None,None,:]
     ny_L = jnp.sin(theta_L)[None,None,:]
@@ -74,7 +57,22 @@ def compute_boundary_normal(X,Y):
     nx_U = jnp.cos(theta_U)[None,:,None]
     ny_U = jnp.sin(theta_U)[None,:,None]
     
-    return nx_L,ny_L,nx_R,ny_R,nx_U,ny_U,nx_B,ny_B
+    
+    
+    # Jacobian（内部节点）
+    J = dx_dxi * dy_deta - dx_deta * dy_dxi
+    dxi_dx = dy_deta/J
+    deta_dx = -dy_dxi/J
+    dxi_dy = -dx_deta/J
+    deta_dy = dx_dxi/J
+    
+    J = jnp.pad(J,pad_width=(3,3),mode='edge')[None,:,:]
+    dxi_dx = jnp.pad(dxi_dx,pad_width=(3,3),mode='edge')[None,:,:]
+    deta_dx = jnp.pad(deta_dx,pad_width=(3,3),mode='edge')[None,:,:]
+    dxi_dy = jnp.pad(dxi_dy,pad_width=(3,3),mode='edge')[None,:,:]
+    deta_dy = jnp.pad(deta_dy,pad_width=(3,3),mode='edge')[None,:,:]
+    
+    return J, dxi_dx, deta_dx, dxi_dy, deta_dy, dxi, deta,nx_L,ny_L,nx_R,ny_R,nx_U,ny_U,nx_B,ny_B
 
 
 def read_CGNS(file_path=None):
@@ -95,5 +93,4 @@ def read_CGNS(file_path=None):
         
         X = jnp.array(node_x[1])
         Y = jnp.array(node_y[1])
-        J, dxi_dx, deta_dx, dxi_dy, deta_dy, dxi, deta = compute_metrics(X, Y)
-        nx_L, ny_L, nx_R, ny_R, nx_U, ny_U, nx_B, ny_B = compute_boundary_normal(X,Y)
+        J, dxi_dx, deta_dx, dxi_dy, deta_dy, dxi, deta, nx_L,ny_L,nx_R,ny_R,nx_U,ny_U,nx_B,ny_B = compute_metrics(X, Y)
