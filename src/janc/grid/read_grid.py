@@ -1,4 +1,5 @@
 import jax.numpy as jnp
+import scipy.io as sio
 import CGNS.MAP
 import CGNS.PAT.cgnsutils as CGU
 
@@ -15,8 +16,22 @@ nx_B = 0.0
 ny_B = -1.0
 nx_U = 0.0
 ny_U = 1.0
-dxi = 1.0
-deta = 1.0
+dxi = 0.0095
+deta = 0.0095
+
+def read_CGNS(file_path):
+    global J,dxi_dx,deta_dx,dxi_dy,deta_dy,nx_U,ny_U
+    data = sio.loadmat(file_path)
+    J = data['J'][None,:,:]
+    dxi_dx = data['kx'][None,:,:]
+    dxi_dy = data['ky'][None,:,:]
+    deta_dx = data['vx'][None,:,:]
+    deta_dy = data['vy'][None,:,:]
+    nx_U = data['n'][:,0][None,:,None]
+    ny_U = data['n'][:,1][None,:,None]
+
+
+
 
 def compute_metrics(X, Y):
     Ni, Nj = X.shape
@@ -75,7 +90,7 @@ def compute_metrics(X, Y):
     return J[None,:,:], dxi_dx[None,:,:], deta_dx[None,:,:], dxi_dy[None,:,:], deta_dy[None,:,:], dxi, deta,nx_L,ny_L,nx_R,ny_R,nx_U,ny_U,nx_B,ny_B
 
 
-def read_CGNS(file_path=None):
+def read_CGNSk(file_path=None):
     global J, dxi_dx, deta_dx, dxi_dy, deta_dy, dxi, deta, nx_L,ny_L,nx_R,ny_R,nx_U,ny_U,nx_B,ny_B
     if file_path is not None:
         tree, links, paths = CGNS.MAP.load(file_path)
