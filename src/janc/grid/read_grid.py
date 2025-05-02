@@ -20,7 +20,7 @@ dxi = 1.0
 deta = 1.0
 
 def read_CGNS(file_path):
-    global J,dxi_dx,deta_dx,dxi_dy,deta_dy,nx_U,ny_U
+    global J,dxi_dx,deta_dx,dxi_dy,deta_dy,nx_U,ny_U,dxi,deta
     data = sio.loadmat(file_path)
     J = data['J'][None,:,:]
     dxi_dx = data['kx'][None,:,:]
@@ -29,7 +29,8 @@ def read_CGNS(file_path):
     deta_dy = data['vy'][None,:,:]
     nx_U = data['n'][:,0][None,3:-3,None]
     ny_U = data['n'][:,1][None,3:-3,None]
-
+    dxi = 0.0095
+    deta = 0.0095
 
 
 
