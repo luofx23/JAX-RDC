@@ -2,6 +2,7 @@ import jax.numpy as jnp
 from jax import jit
 from ..solver import aux_func
 from ..grid import read_grid
+from ..thermodynamics import thermo
 
 p = 2
 eps = 1e-6
@@ -37,9 +38,39 @@ def splitFlux_LF(ixy, U):
     um = jnp.nanmax(abs(u_J) + a*grad_xi_norm)
     vm = jnp.nanmax(abs(v_J) + a*grad_eta_norm)
     theta = zx*um + zy*vm
-    Hplus = 0.5 * (flux + theta * 1.0 * U)
-    Hminus = 0.5 * (flux - theta * 1.0 * U)
+    Hplus = 0.5 * (flux + theta * read_grid.J * U)
+    Hminus = 0.5 * (flux - theta * read_grid.J * U)
     return Hplus, Hminus
+
+@jit
+def splitFlux_SW(ixy,U):
+    zx_org = (ixy==1)*read_grid.dxi_dx + (ixy==2)*read_grid.deta_dx
+    zy_org = (ixy==1)*read_grid.dxi_dy + (ixy==2)*read_grid.deta_dy
+    grad_norm = jnp.sqrt(zx_org**2+zy_org**2)
+    zx = zx_org/grad_norm
+    zy = zy_org/grad_norm
+    J = read_grid.J
+    gamma = thermo.gamma
+    rho,u,v,p,a = aux_func.U_to_prim(U)
+    rhoE = U[3:4,:,:]
+    theta = zx*u + zy*v
+    H1 = J/(2*gamma)*jnp.concatenate([rho,rho*u-rho*a*zx,rho*v-rho*a*zy,rhoE+p-rho*a*theta],axis=0)
+    H2 = J*(gamma-1)/gamma*jnp.concatenate([rho,rho*u,rho*v,0.5*rho*(u**2+v**2)],axis=0)
+    H4 = J/(2*gamma)*jnp.concatenate([rho,rho*u+rho*a*zx,rho*v+rho*a*zy,rhoE+p+rho*a*theta],axis=0)
+    eps = 1e-6
+    lambda1 = zx_org*u+zy_org*v-a*grad_norm
+    lambda1p = 0.5*(lambda1+jnp.sqrt(lambda1**2+eps**2))
+    lambda1m = 0.5*(lambda1-jnp.sqrt(lambda1**2+eps**2))
+    lambda2 = zx_org*u+zy_org*v
+    lambda2p = 0.5*(lambda2+jnp.sqrt(lambda2**2+eps**2))
+    lambda2m = 0.5*(lambda2-jnp.sqrt(lambda2**2+eps**2))
+    lambda4 = zx_org*u+zy_org*v+a*grad_norm
+    lambda4p = 0.5*(lambda4+jnp.sqrt(lambda4**2+eps**2))
+    lambda4m = 0.5*(lambda4-jnp.sqrt(lambda4**2+eps**2))
+    Hplus = lambda1p*H1 + lambda2p*H2 + lambda4p*H4
+    Hminus = lambda1m*H1 + lambda2m*H2 + lambda4m*H4
+    return Hplus,Hminus
+
 
 @jit
 def WENO_plus_x(f):
@@ -165,8 +196,8 @@ def WENO_minus_y(f):
 
 @jit
 def weno5(U):
-    Fplus, Fminus = splitFlux_LF(1, U)
-    Gplus, Gminus = splitFlux_LF(2, U)
+    Fplus, Fminus = splitFlux_SW(1, U)
+    Gplus, Gminus = splitFlux_SW(2, U)
 
     dFp = WENO_plus_x(Fplus)
     dFm = WENO_minus_x(Fminus)
