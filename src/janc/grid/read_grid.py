@@ -45,17 +45,17 @@ def compute_metrics(X, Y):
     #up_boundary
     theta_U = jnp.atan(dy_dxi[:,-1]/dx_dxi[:,-1]) - jnp.pi/2
     
-    nx_L = jnp.cos(theta_L)[None,None,:]
-    ny_L = jnp.sin(theta_L)[None,None,:]
+    nx_L = jnp.cos(theta_L)[None,None,1:-1]
+    ny_L = jnp.sin(theta_L)[None,None,1:-1]
     
-    nx_R = jnp.cos(theta_R)[None,None,:]
-    ny_R = jnp.sin(theta_R)[None,None,:]
+    nx_R = jnp.cos(theta_R)[None,None,1:-1]
+    ny_R = jnp.sin(theta_R)[None,None,1:-1]
     
-    nx_B = jnp.cos(theta_B)[None,:,None]
-    ny_B = jnp.sin(theta_B)[None,:,None]
+    nx_B = jnp.cos(theta_B)[None,1:-1,None]
+    ny_B = jnp.sin(theta_B)[None,1:-1,None]
     
-    nx_U = jnp.cos(theta_U)[None,:,None]
-    ny_U = jnp.sin(theta_U)[None,:,None]
+    nx_U = jnp.cos(theta_U)[None,1:-1,None]
+    ny_U = jnp.sin(theta_U)[None,1:-1,None]
     
     
     
