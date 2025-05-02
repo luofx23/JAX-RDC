@@ -72,7 +72,7 @@ def compute_metrics(X, Y):
     #dxi_dy = jnp.pad(dxi_dy,pad_width=(2,2),mode='edge')[None,:,:]
     #deta_dy = jnp.pad(deta_dy,pad_width=(2,2),mode='edge')[None,:,:]
     
-    return J, dxi_dx, deta_dx, dxi_dy, deta_dy, dxi, deta,nx_L,ny_L,nx_R,ny_R,nx_U,ny_U,nx_B,ny_B
+    return J[None,:,:], dxi_dx[None,:,:], deta_dx[None,:,:], dxi_dy[None,:,:], deta_dy[None,:,:], dxi, deta,nx_L,ny_L,nx_R,ny_R,nx_U,ny_U,nx_B,ny_B
 
 
 def read_CGNS(file_path=None):
