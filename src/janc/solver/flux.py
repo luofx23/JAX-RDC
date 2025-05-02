@@ -37,8 +37,8 @@ def splitFlux_LF(ixy, U):
     um = jnp.nanmax(abs(u_J) + a*grad_xi_norm)
     vm = jnp.nanmax(abs(v_J) + a*grad_eta_norm)
     theta = zx*um + zy*vm
-    Hplus = 0.5 * (flux + theta * read_grid.J * U)
-    Hminus = 0.5 * (flux - theta * read_grid.J * U)
+    Hplus = 0.5 * (flux + theta * 1.0 * U)
+    Hminus = 0.5 * (flux - theta * 1.0 * U)
     return Hplus, Hminus
 
 @jit
