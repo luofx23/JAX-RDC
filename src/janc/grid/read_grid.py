@@ -27,8 +27,8 @@ def read_CGNS(file_path):
     dxi_dy = data['ky'][None,:,:]
     deta_dx = data['vx'][None,:,:]
     deta_dy = data['vy'][None,:,:]
-    nx_U = data['n'][:,0][None,:,None]
-    ny_U = data['n'][:,1][None,:,None]
+    nx_U = data['n'][:,0][None,3:-3,None]
+    ny_U = data['n'][:,1][None,3:-3,None]
 
 
 
