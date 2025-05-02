@@ -66,11 +66,11 @@ def compute_metrics(X, Y):
     dxi_dy = -dx_deta/J
     deta_dy = dx_dxi/J
     
-    J = jnp.pad(J,pad_width=(3,3),mode='edge')[None,:,:]
-    dxi_dx = jnp.pad(dxi_dx,pad_width=(3,3),mode='edge')[None,:,:]
-    deta_dx = jnp.pad(deta_dx,pad_width=(3,3),mode='edge')[None,:,:]
-    dxi_dy = jnp.pad(dxi_dy,pad_width=(3,3),mode='edge')[None,:,:]
-    deta_dy = jnp.pad(deta_dy,pad_width=(3,3),mode='edge')[None,:,:]
+    J = jnp.pad(J,pad_width=(2,2),mode='edge')[None,:,:]
+    dxi_dx = jnp.pad(dxi_dx,pad_width=(2,2),mode='edge')[None,:,:]
+    deta_dx = jnp.pad(deta_dx,pad_width=(2,2),mode='edge')[None,:,:]
+    dxi_dy = jnp.pad(dxi_dy,pad_width=(2,2),mode='edge')[None,:,:]
+    deta_dy = jnp.pad(deta_dy,pad_width=(2,2),mode='edge')[None,:,:]
     
     return J, dxi_dx, deta_dx, dxi_dy, deta_dy, dxi, deta,nx_L,ny_L,nx_R,ny_R,nx_U,ny_U,nx_B,ny_B
 
