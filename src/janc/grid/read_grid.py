@@ -60,17 +60,17 @@ def compute_metrics(X, Y):
     #up_boundary
     theta_U = jnp.atan(dy_dxi[:,-1]/dx_dxi[:,-1]) - jnp.pi/2
     
-    nx_L = jnp.cos(theta_L)[None,None,1:-1]
-    ny_L = jnp.sin(theta_L)[None,None,1:-1]
+    nx_L = jnp.cos(theta_L)[None,None,3:-3]
+    ny_L = jnp.sin(theta_L)[None,None,3:-3]
     
-    nx_R = jnp.cos(theta_R)[None,None,1:-1]
-    ny_R = jnp.sin(theta_R)[None,None,1:-1]
+    nx_R = jnp.cos(theta_R)[None,None,3:-3]
+    ny_R = jnp.sin(theta_R)[None,None,3:-3]
     
-    nx_B = jnp.cos(theta_B)[None,1:-1,None]
-    ny_B = jnp.sin(theta_B)[None,1:-1,None]
+    nx_B = jnp.cos(theta_B)[None,3:-3,None]
+    ny_B = jnp.sin(theta_B)[None,3:-3,None]
     
-    nx_U = jnp.cos(theta_U)[None,1:-1,None]
-    ny_U = jnp.sin(theta_U)[None,1:-1,None]
+    nx_U = jnp.cos(theta_U)[None,3:-3,None]
+    ny_U = jnp.sin(theta_U)[None,3:-3,None]
     
     
     
@@ -81,13 +81,13 @@ def compute_metrics(X, Y):
     dxi_dy = -dx_deta/J
     deta_dy = dx_dxi/J
     
-    J = jnp.pad(J,pad_width=(2,2),mode='edge')[None,:,:]
-    dxi_dx = jnp.pad(dxi_dx,pad_width=(2,2),mode='edge')[None,:,:]
-    deta_dx = jnp.pad(deta_dx,pad_width=(2,2),mode='edge')[None,:,:]
-    dxi_dy = jnp.pad(dxi_dy,pad_width=(2,2),mode='edge')[None,:,:]
-    deta_dy = jnp.pad(deta_dy,pad_width=(2,2),mode='edge')[None,:,:]
+    #J = jnp.pad(J,pad_width=(2,2),mode='edge')[None,:,:]
+    #dxi_dx = jnp.pad(dxi_dx,pad_width=(2,2),mode='edge')[None,:,:]
+    #deta_dx = jnp.pad(deta_dx,pad_width=(2,2),mode='edge')[None,:,:]
+    #dxi_dy = jnp.pad(dxi_dy,pad_width=(2,2),mode='edge')[None,:,:]
+    #deta_dy = jnp.pad(deta_dy,pad_width=(2,2),mode='edge')[None,:,:]
     
-    return J, dxi_dx, deta_dx, dxi_dy, deta_dy, dxi, deta,nx_L,ny_L,nx_R,ny_R,nx_U,ny_U,nx_B,ny_B
+    return J[None,:,:], dxi_dx[None,:,:], deta_dx[None,:,:], dxi_dy[None,:,:], deta_dy[None,:,:], dxi, deta,nx_L,ny_L,nx_R,ny_R,nx_U,ny_U,nx_B,ny_B
 
 
 def read_CGNS(file_path=None):
