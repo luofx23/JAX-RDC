@@ -18,7 +18,7 @@ def set_boundary(boundary_config:dict):
     
     if callable(boundary_config['left_boundary']):
         def left_boundary(padded_U,theta=None):
-            U_lb = padded_U[:,3:6,2:-2]
+            U_lb = padded_U[:,3:6,3:-3]
             U_lb = boundary_config['left_boundary'](U_lb,theta)
             U_with_lb = replace_lb(U_lb,padded_U)
             return U_with_lb
@@ -31,7 +31,7 @@ def set_boundary(boundary_config:dict):
                 
         if boundary_config['left_boundary'] == 'slip_wall':
             def left_boundary(padded_U,theta=None):
-                U_lb = padded_U[:,3:6,2:-2]
+                U_lb = padded_U[:,3:6,3:-3]
                 U_lb = slip_wall.left(U_lb)
                 U_with_lb = replace_lb(U_lb,padded_U)
                 return U_with_lb
@@ -40,13 +40,13 @@ def set_boundary(boundary_config:dict):
                 return padded_U
         elif boundary_config['left_boundary'] == 'neumann':
             def left_boundary(padded_U,theta=None):
-                U_lb = padded_U[:,3:6,2:-2]
+                U_lb = padded_U[:,3:6,3:-3]
                 U_lb = neumann.left(U_lb)
                 U_with_lb = replace_lb(U_lb,padded_U)
                 return U_with_lb
         elif boundary_config['left_boundary'] == 'pressure_outlet':
             def left_boundary(padded_U,theta=None):
-                U_lb = padded_U[:,3:6,2:-2]
+                U_lb = padded_U[:,3:6,3:-3]
                 U_lb = pressure_outlet.left(U_lb,theta)
                 U_with_lb = replace_lb(U_lb,padded_U)
                 return U_with_lb
@@ -56,7 +56,7 @@ def set_boundary(boundary_config:dict):
     
     if callable(boundary_config['right_boundary']):
         def right_boundary(padded_U,theta=None):
-            U_rb = padded_U[:,-6:-3,2:-2]
+            U_rb = padded_U[:,-6:-3,3:-3]
             U_rb = boundary_config['right_boundary'](U_rb,theta)
             U_with_rb = replace_rb(U_rb,padded_U)
             return U_with_rb
@@ -69,7 +69,7 @@ def set_boundary(boundary_config:dict):
                 
         if boundary_config['right_boundary'] == 'slip_wall':
             def right_boundary(padded_U,theta=None):
-                U_rb = padded_U[:,-6:-3,2:-2]
+                U_rb = padded_U[:,-6:-3,3:-3]
                 U_rb = slip_wall.right(U_rb)
                 U_with_rb = replace_rb(U_rb,padded_U)
                 return U_with_rb
@@ -78,13 +78,13 @@ def set_boundary(boundary_config:dict):
                 return padded_U
         elif boundary_config['right_boundary'] == 'neumann':
             def right_boundary(padded_U,theta=None):
-                U_rb = padded_U[:,-6:-3,2:-2]
+                U_rb = padded_U[:,-6:-3,3:-3]
                 U_rb = neumann.right(U_rb)
                 U_with_rb = replace_rb(U_rb,padded_U)
                 return U_with_rb
         elif boundary_config['right_boundary'] == 'pressure_outlet':
             def right_boundary(padded_U,theta=None):
-                U_rb = padded_U[:,-6:-3,2:-2]
+                U_rb = padded_U[:,-6:-3,3:-3]
                 U_rb= pressure_outlet.right(U_rb,theta)
                 U_with_rb = replace_rb(U_rb,padded_U)
                 return U_with_rb
@@ -95,7 +95,7 @@ def set_boundary(boundary_config:dict):
     
     if callable(boundary_config['bottom_boundary']):
         def bottom_boundary(padded_U,theta=None):
-            U_bb = padded_U[:,2:-2,3:6]
+            U_bb = padded_U[:,3:-3,3:6]
             U_bb = boundary_config['bottom_boundary'](U_bb,theta)
             U_with_bb = replace_bb(U_bb,padded_U)
             return U_with_bb
@@ -108,7 +108,7 @@ def set_boundary(boundary_config:dict):
                 
         if boundary_config['bottom_boundary'] == 'slip_wall':
             def bottom_boundary(padded_U,theta=None):
-                U_bb = padded_U[:,2:-2,3:6]
+                U_bb = padded_U[:,3:-3,3:6]
                 U_bb  = slip_wall.bottom(U_bb)
                 U_with_bb = replace_bb(U_bb,padded_U)
                 return U_with_bb
@@ -117,13 +117,13 @@ def set_boundary(boundary_config:dict):
                 return padded_U
         elif boundary_config['bottom_boundary'] == 'neumann':
             def bottom_boundary(padded_U,theta=None):
-                U_bb = padded_U[:,2:-2,3:6]
+                U_bb = padded_U[:,3:-3,3:6]
                 U_bb = neumann.bottom(U_bb)
                 U_with_bb = replace_bb(U_bb,padded_U)
                 return U_with_bb
         elif boundary_config['bottom_boundary'] == 'pressure_outlet':
             def bottom_boundary(padded_U,theta=None):
-                U_bb = padded_U[:,2:-2,3:6]
+                U_bb = padded_U[:,3:-3,3:6]
                 U_bb = pressure_outlet.bottom(U_bb,theta)
                 U_with_bb = replace_bb(U_bb,padded_U)
                 return U_with_bb
@@ -134,7 +134,7 @@ def set_boundary(boundary_config:dict):
     
     if callable(boundary_config['up_boundary']):
         def up_boundary(padded_U,theta=None):
-            U_ub = padded_U[:,2:-2,-6:-3]
+            U_ub = padded_U[:,3:-3,-6:-3]
             U_ub = boundary_config['up_boundary'](U_ub,theta)
             U_with_ub = replace_ub(U_ub,padded_U)
             return U_with_ub
@@ -147,7 +147,7 @@ def set_boundary(boundary_config:dict):
                 
         if boundary_config['up_boundary'] == 'slip_wall':
             def up_boundary(padded_U,theta=None):
-                U_ub = padded_U[:,2:-2,-6:-3]
+                U_ub = padded_U[:,3:-3,-6:-3]
                 U_ub = slip_wall.up(U_ub)
                 U_with_ub = replace_ub(U_ub,padded_U)
                 return U_with_ub
@@ -156,13 +156,13 @@ def set_boundary(boundary_config:dict):
                 return padded_U
         elif boundary_config['up_boundary'] == 'neumann':
             def up_boundary(padded_U,theta=None):
-                U_ub = padded_U[:,2:-2,-6:-3]
+                U_ub = padded_U[:,3:-3,-6:-3]
                 U_ub = neumann.up(U_ub)
                 U_with_ub = replace_ub(U_ub,padded_U)
                 return U_with_ub
         elif boundary_config['up_boundary'] == 'pressure_outlet':
             def up_boundary(padded_U,theta=None):
-                U_ub = padded_U[:,2:-2,-6:-3]
+                U_ub = padded_U[:,3:-3,-6:-3]
                 U_ub = pressure_outlet.up(U_ub,theta)
                 U_with_ub= replace_ub(U_ub,padded_U)
                 return U_with_ub
