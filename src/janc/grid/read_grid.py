@@ -16,10 +16,10 @@ nx_B = 0.0
 ny_B = -1.0
 nx_U = 0.0
 ny_U = 1.0
-dxi = 0.0095
-deta = 0.0095
+dxi = 1.0
+deta = 1.0
 
-def read_CGNS(file_path):
+def read_CGNSt(file_path):
     global J,dxi_dx,deta_dx,dxi_dy,deta_dy,nx_U,ny_U
     data = sio.loadmat(file_path)
     J = data['J'][None,:,:]
@@ -90,7 +90,7 @@ def compute_metrics(X, Y):
     return J[None,:,:], dxi_dx[None,:,:], deta_dx[None,:,:], dxi_dy[None,:,:], deta_dy[None,:,:], dxi, deta,nx_L,ny_L,nx_R,ny_R,nx_U,ny_U,nx_B,ny_B
 
 
-def read_CGNSk(file_path=None):
+def read_CGNS(file_path=None):
     global J, dxi_dx, deta_dx, dxi_dy, deta_dy, dxi, deta, nx_L,ny_L,nx_R,ny_R,nx_U,ny_U,nx_B,ny_B
     if file_path is not None:
         tree, links, paths = CGNS.MAP.load(file_path)
