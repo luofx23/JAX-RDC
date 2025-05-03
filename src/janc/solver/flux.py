@@ -196,8 +196,8 @@ def WENO_minus_y(f):
 
 @jit
 def weno5(U):
-    Fplus, Fminus = splitFlux_SW(1, U)
-    Gplus, Gminus = splitFlux_SW(2, U)
+    Fplus, Fminus = splitFlux_LF(1, U)
+    Gplus, Gminus = splitFlux_LF(2, U)
 
     dFp = WENO_plus_x(Fplus)
     dFm = WENO_minus_x(Fminus)
