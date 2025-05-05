@@ -8,7 +8,7 @@ setup(
     package_dir={"": "src"},
     install_requires=[
         'cantera',
-        'pyCGNS'
+        'jaxamr @ git+https://github.com/JA4S/JAX-AMR.git'
     ],
     python_requires=">=3.7"
 )
