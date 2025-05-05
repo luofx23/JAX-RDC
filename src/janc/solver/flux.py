@@ -1,8 +1,6 @@
 import jax.numpy as jnp
 from jax import jit
 from ..solver import aux_func
-from ..grid import read_grid
-from ..thermodynamics import thermo
 
 p = 2
 eps = 1e-6
@@ -12,65 +10,20 @@ C3 = 3 / 10
 
 
 @jit
-def splitFlux_LF(ixy, U):
-    rho,u,v,p,a = aux_func.U_to_prim(U)
+def splitFlux_LF(ixy, U, aux):
+    rho,u,v,Y,p,a = aux_func.U_to_prim(U,aux)
     rhoE = U[3:4,:,:]
 
     zx = (ixy == 1) * 1
     zy = (ixy == 2) * 1
-    
-    F = jnp.concatenate([rho * u, rho * u ** 2 + p, rho * u * v, u * (rhoE + p)], axis=0)
-    G = jnp.concatenate([rho * v, rho * u * v, rho * v ** 2 + p, v * (rhoE + p)], axis=0)
-    
-    F_J = read_grid.J*(F*read_grid.dxi_dx+G*read_grid.dxi_dy)
-    G_J = read_grid.J*(F*read_grid.deta_dx+G*read_grid.deta_dy)
 
-    flux = zx*F_J + zy*G_J
-    
-    grad_xi = jnp.concatenate([read_grid.dxi_dx,read_grid.dxi_dy],axis=0)
-    grad_eta = jnp.concatenate([read_grid.deta_dx,read_grid.deta_dy],axis=0)
-    grad_xi_norm = jnp.sqrt(grad_xi[0:1]**2 + grad_xi[1:2]**2)
-    grad_eta_norm = jnp.sqrt(grad_eta[0:1]**2 + grad_eta[1:2]**2)
-    
-    u_J = read_grid.dxi_dx*u + read_grid.dxi_dy*v
-    v_J = read_grid.deta_dx*u + read_grid.deta_dy*v
-    
-    um = jnp.nanmax(abs(u_J) + a*grad_xi_norm)
-    vm = jnp.nanmax(abs(v_J) + a*grad_eta_norm)
+    F = zx*jnp.concatenate([rho * u, rho * u ** 2 + p, rho * u * v, u * (rhoE + p), rho * u * Y], axis=0) + zy*jnp.concatenate([rho * v, rho * u * v, rho * v ** 2 + p, v * (rhoE + p), rho * v * Y], axis=0)
+    um = jnp.nanmax(abs(u) + a)
+    vm = jnp.nanmax(abs(v) + a)
     theta = zx*um + zy*vm
-    Hplus = 0.5 * (flux + theta * read_grid.J * U)
-    Hminus = 0.5 * (flux - theta * read_grid.J * U)
+    Hplus = 0.5 * (F + theta * U)
+    Hminus = 0.5 * (F - theta * U)
     return Hplus, Hminus
-
-@jit
-def splitFlux_SW(ixy,U):
-    zx_org = (ixy==1)*read_grid.dxi_dx + (ixy==2)*read_grid.deta_dx
-    zy_org = (ixy==1)*read_grid.dxi_dy + (ixy==2)*read_grid.deta_dy
-    grad_norm = jnp.sqrt(zx_org**2+zy_org**2)
-    zx = zx_org/grad_norm
-    zy = zy_org/grad_norm
-    J = read_grid.J
-    gamma = thermo.gamma
-    rho,u,v,p,a = aux_func.U_to_prim(U)
-    rhoE = U[3:4,:,:]
-    theta = zx*u + zy*v
-    H1 = J/(2*gamma)*jnp.concatenate([rho,rho*u-rho*a*zx,rho*v-rho*a*zy,rhoE+p-rho*a*theta],axis=0)
-    H2 = J*(gamma-1)/gamma*jnp.concatenate([rho,rho*u,rho*v,0.5*rho*(u**2+v**2)],axis=0)
-    H4 = J/(2*gamma)*jnp.concatenate([rho,rho*u+rho*a*zx,rho*v+rho*a*zy,rhoE+p+rho*a*theta],axis=0)
-    eps = 1e-6
-    lambda1 = zx_org*u+zy_org*v-a*grad_norm
-    lambda1p = 0.5*(lambda1+jnp.sqrt(lambda1**2+eps**2))
-    lambda1m = 0.5*(lambda1-jnp.sqrt(lambda1**2+eps**2))
-    lambda2 = zx_org*u+zy_org*v
-    lambda2p = 0.5*(lambda2+jnp.sqrt(lambda2**2+eps**2))
-    lambda2m = 0.5*(lambda2-jnp.sqrt(lambda2**2+eps**2))
-    lambda4 = zx_org*u+zy_org*v+a*grad_norm
-    lambda4p = 0.5*(lambda4+jnp.sqrt(lambda4**2+eps**2))
-    lambda4m = 0.5*(lambda4-jnp.sqrt(lambda4**2+eps**2))
-    Hplus = lambda1p*H1 + lambda2p*H2 + lambda4p*H4
-    Hminus = lambda1m*H1 + lambda2m*H2 + lambda4m*H4
-    return Hplus,Hminus
-
 
 @jit
 def WENO_plus_x(f):
@@ -195,9 +148,9 @@ def WENO_minus_y(f):
     return dfj
 
 @jit
-def weno5(U):
-    Fplus, Fminus = splitFlux_LF(1, U)
-    Gplus, Gminus = splitFlux_LF(2, U)
+def weno5(U,aux,dx,dy):
+    Fplus, Fminus = splitFlux_LF(1, U, aux)
+    Gplus, Gminus = splitFlux_LF(2, U, aux)
 
     dFp = WENO_plus_x(Fplus)
     dFm = WENO_minus_x(Fminus)
@@ -208,6 +161,28 @@ def weno5(U):
     dF = dFp + dFm
     dG = dGp + dGm
 
-    netflux = dF/(read_grid.dxi) + dG/(read_grid.deta)
+    netflux = dF/dx + dG/dy
 
-    return (-netflux)/read_grid.J[:,3:-3,3:-3]
+    return -netflux
+
+@jit
+def weno5_amr(field,dx,dy):
+    
+    U,aux_old = field[0:-2],field[-2:]
+    aux = aux_func.update_aux(U,aux_old)
+    
+    Fplus, Fminus = splitFlux_LF(1, U, aux)
+    Gplus, Gminus = splitFlux_LF(2, U, aux)
+
+    dFp = WENO_plus_x(Fplus)
+    dFm = WENO_minus_x(Fminus)
+
+    dGp = WENO_plus_y(Gplus)
+    dGm = WENO_minus_y(Gminus)
+
+    dF = dFp + dFm
+    dG = dGp + dGm
+
+    netflux = dF/dx + dG/dy
+
+    return -netflux
