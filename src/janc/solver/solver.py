@@ -138,7 +138,7 @@ def set_solver(thermo_set, boundary_set, source_set = None, nondim_set = None, s
                 @jit    
                 def advance_one_step(field,dx,dy,dt,theta=None):
                     field_adv = advance_flux(field,dx,dy,dt,theta)
-                    field = advance_source_term(field_adv,dt,theta)
+                    field = advance_source_term(field_adv,dt) ################
                     return field
     else:
         if solver_mode == 'amr':
