@@ -81,6 +81,6 @@ def solve_implicit_rate(T,rho,Y,dt):
     drhoY = jnp.transpose(x[:,:,:,0],(2,0,1))
     #drhoY = jnp.concatenate([x,-jnp.sum(x,axis=0,keepdims=True)],axis=0)
     dY = drhoY/rho
-    dY = jnp.clip(dY,min=-Y[0:-1],max=1-Y[0:-1])
+    #dY = jnp.clip(dY,min=-Y[0:-1],max=1-Y[0:-1])
     return rho*dY
 
