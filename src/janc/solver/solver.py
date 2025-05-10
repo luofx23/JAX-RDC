@@ -86,8 +86,21 @@ def set_solver(thermo_set, boundary_set, source_set = None, nondim_set = None, s
             field = jnp.concatenate([U3,aux],axis=0)
             
             return field
-    
-    def advance_source_term(field,dt,theta):
+            
+    def advance_source_term(field,dt):
+        U, aux = field[0:-2],field[-2:]
+        aux = aux_func.update_aux(U, aux)
+        _,T = aux_func.aux_to_thermo(U,aux)
+        rho = U[0:1]
+        Y = U[4:]/rho
+        drhoY = chemical.solve_implicit_rate(T,rho,Y,dt)
+
+        p1 = U[0:4,:,:]
+        p2 = U[4:,:,:] + drhoY
+        U_new = jnp.concatenate([p1,p2],axis=0)
+        return jnp.concatenate([U_new,aux],axis=0)
+        
+    def advance_source_termk(field,dt,theta):
         U = field[0:-2]/theta['AR'][0:1]
         aux = field[-2:]
         aux = aux_func.update_aux(U, aux)
